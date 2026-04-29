@@ -1,0 +1,61 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
+
+class Reservation extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'user_id',
+        'restaurant_id',
+        'table_id',
+        'start_time',
+        'duration_minutes',
+        'guests',
+        'status',
+        'notes',
+        'qr_code',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'start_time'       => 'datetime',
+            'duration_minutes' => 'integer',
+            'guests'           => 'integer',
+        ];
+    }
+
+    // ── Boot: generar QR al crear ──────────────────────────────────────────────
+    protected static function booted(): void
+    {
+        static::creating(function (Reservation $r) {
+            // QR como URL pública imaginaria; en prod usa simplesoftware/simple-qrcode
+            $token = Str::random(32);
+            $r->qr_code = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=reservaya-{$token}";
+            $r->status  ??= 'confirmed';
+        });
+    }
+
+    // ── Relaciones ─────────────────────────────────────────────────────────────
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function restaurant(): BelongsTo
+    {
+        return $this->belongsTo(Restaurant::class);
+    }
+
+    public function table(): BelongsTo
+    {
+        return $this->belongsTo(Table::class);
+    }
+}

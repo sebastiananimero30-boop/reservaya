@@ -1,0 +1,20 @@
+FROM php:8.3-fpm-alpine AS builder
+
+RUN apk add --no-cache postgresql-dev libzip-dev unzip curl
+RUN docker-php-ext-install pdo pdo_pgsql zip opcache
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+WORKDIR /var/www/html
+COPY . .
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+FROM php:8.3-fpm-alpine
+RUN apk add --no-cache postgresql-dev libzip-dev
+RUN docker-php-ext-install pdo pdo_pgsql zip opcache
+
+WORKDIR /var/www/html
+COPY --from=builder /var/www/html .
+RUN chmod -R 775 storage bootstrap/cache
+
+EXPOSE 9000
+CMD ["php-fpm"]
