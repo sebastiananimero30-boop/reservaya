@@ -1,6 +1,7 @@
+import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import { Star, MapPin, Clock, Phone, ArrowLeft, ChefHat } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Star, MapPin, Clock, Phone, ArrowLeft, ChefHat, X, ShoppingBag } from 'lucide-react'
 import { useRestaurant } from '../hooks/useRestaurants'
 import ReservationForm from '../components/reservations/ReservationForm'
 import Spinner from '../components/common/Spinner'
@@ -9,6 +10,181 @@ import clsx from 'clsx'
 const CATEGORY_EMOJIS = {
   'Parrilla':'🥩','Japonesa':'🍣','Vegetariana':'🥗','Colombiana':'🍲',
   'Francesa':'🥐','Italiana':'🍕','Mariscos':'🦞','Americana':'🍔',
+}
+
+// Imágenes placeholder por categoría de plato cuando no hay foto
+const PLACEHOLDER_BY_CAT = {
+  'Entradas':       'https://images.unsplash.com/photo-1541014741259-de529411b96a?w=400',
+  'Platos Fuertes': 'https://images.unsplash.com/photo-1544025162-d76694265947?w=400',
+  'Pastas':         'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400',
+  'Pizzas':         'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400',
+  'Postres':        'https://images.unsplash.com/photo-1551024601-bec78aea704b?w=400',
+  'Bebidas':        'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400',
+  'Carnes':         'https://images.unsplash.com/photo-1558030006-450675393462?w=400',
+  'Sushi':          'https://images.unsplash.com/photo-1617196034183-421b4040ed20?w=400',
+  'Hamburguesas':   'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400',
+}
+const DEFAULT_PLACEHOLDER = 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400'
+
+function getPlaceholder(categoria) {
+  return PLACEHOLDER_BY_CAT[categoria] || DEFAULT_PLACEHOLDER
+}
+
+// ── Modal detalle de plato ────────────────────────────────────────────────────
+function MenuItemModal({ item, onClose }) {
+  if (!item) return null
+  const imgSrc = item.imagen || getPlaceholder(item.categoria)
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.92, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.92, y: 20 }}
+        className="relative bg-white dark:bg-stone-800 rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden z-10"
+      >
+        {/* Foto grande */}
+        <div className="relative h-56 bg-stone-100 dark:bg-stone-700">
+          <img src={imgSrc} alt={item.nombre}
+            className="w-full h-full object-cover"
+            onError={e => { e.target.src = DEFAULT_PLACEHOLDER }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+          <button onClick={onClose}
+            className="absolute top-3 right-3 w-8 h-8 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center transition-colors">
+            <X className="w-4 h-4 text-white" />
+          </button>
+          <span className="absolute bottom-3 left-3 text-xs bg-white/20 backdrop-blur-sm text-white px-2.5 py-1 rounded-full font-medium">
+            {item.categoria}
+          </span>
+        </div>
+
+        {/* Info */}
+        <div className="p-5">
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <h3 className="font-bold text-xl text-stone-900 dark:text-stone-100 leading-tight">{item.nombre}</h3>
+            <span className="font-bold text-primary-500 text-xl whitespace-nowrap">
+              ${Number(item.precio).toLocaleString('es-CO')}
+            </span>
+          </div>
+          {item.descripcion && (
+            <p className="text-stone-500 dark:text-stone-400 text-sm leading-relaxed">{item.descripcion}</p>
+          )}
+          {!item.disponible && (
+            <p className="text-xs text-red-500 mt-3 font-medium">⚠️ No disponible actualmente</p>
+          )}
+        </div>
+      </motion.div>
+    </div>
+  )
+}
+
+// ── Tarjeta de plato ──────────────────────────────────────────────────────────
+function MenuCard({ item, onClick }) {
+  const imgSrc = item.imagen || getPlaceholder(item.categoria)
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -4 }}
+      onClick={onClick}
+      className={clsx(
+        'bg-white dark:bg-stone-800 rounded-2xl overflow-hidden border border-stone-100 dark:border-stone-700',
+        'cursor-pointer shadow-sm hover:shadow-lg transition-all duration-200',
+        !item.disponible && 'opacity-60'
+      )}
+    >
+      {/* Imagen */}
+      <div className="relative h-40 bg-stone-100 dark:bg-stone-700 overflow-hidden">
+        <img
+          src={imgSrc} alt={item.nombre}
+          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+          onError={e => { e.target.src = DEFAULT_PLACEHOLDER }}
+          loading="lazy"
+        />
+        {!item.disponible && (
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+            <span className="text-white text-xs font-semibold bg-black/60 px-3 py-1 rounded-full">No disponible</span>
+          </div>
+        )}
+        <span className="absolute top-2 left-2 text-[10px] bg-black/50 backdrop-blur-sm text-white px-2 py-0.5 rounded-full font-medium">
+          {item.categoria}
+        </span>
+      </div>
+
+      {/* Info */}
+      <div className="p-3">
+        <p className="font-semibold text-stone-900 dark:text-stone-100 text-sm leading-tight line-clamp-1">{item.nombre}</p>
+        {item.descripcion && (
+          <p className="text-xs text-stone-400 mt-1 line-clamp-2 leading-relaxed">{item.descripcion}</p>
+        )}
+        <p className="font-bold text-primary-500 text-sm mt-2">
+          ${Number(item.precio).toLocaleString('es-CO')}
+        </p>
+      </div>
+    </motion.div>
+  )
+}
+
+// ── Galería del menú ──────────────────────────────────────────────────────────
+function MenuGallery({ items }) {
+  const [activeTab, setActiveTab] = useState('Todos')
+  const [selectedItem, setSelectedItem] = useState(null)
+
+  const categories = ['Todos', ...new Set(items.map(i => i.categoria).filter(Boolean))]
+
+  const filtered = activeTab === 'Todos'
+    ? items
+    : items.filter(i => i.categoria === activeTab)
+
+  return (
+    <div className="bg-white dark:bg-stone-800 rounded-2xl border border-stone-100 dark:border-stone-700 overflow-hidden">
+      {/* Header */}
+      <div className="p-4 border-b border-stone-100 dark:border-stone-700 flex items-center gap-2">
+        <ChefHat className="w-4 h-4 text-primary-500" />
+        <h2 className="font-semibold">Menú</h2>
+        <span className="ml-auto text-xs text-stone-400">{items.length} platos</span>
+      </div>
+
+      {/* Filtros por categoría */}
+      {categories.length > 2 && (
+        <div className="px-4 pt-3 pb-1 flex gap-2 overflow-x-auto scrollbar-hide">
+          {categories.map(cat => (
+            <button key={cat} onClick={() => setActiveTab(cat)}
+              className={clsx(
+                'flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition-all',
+                activeTab === cat
+                  ? 'bg-primary-500 text-white shadow-sm'
+                  : 'bg-stone-100 dark:bg-stone-700 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-600'
+              )}>
+              {cat}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Grid de tarjetas */}
+      <div className="p-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <AnimatePresence mode="popLayout">
+          {filtered.map(item => (
+            <MenuCard key={item.id} item={item} onClick={() => setSelectedItem(item)} />
+          ))}
+        </AnimatePresence>
+      </div>
+
+      {/* Modal */}
+      <AnimatePresence>
+        {selectedItem && (
+          <MenuItemModal item={selectedItem} onClose={() => setSelectedItem(null)} />
+        )}
+      </AnimatePresence>
+    </div>
+  )
 }
 
 export default function RestaurantDetail() {
@@ -29,8 +205,9 @@ export default function RestaurantDetail() {
   )
 
   const emoji = CATEGORY_EMOJIS[restaurant.categoria] || '🍽️'
-  const mapSrc = restaurant.latitud
-    ? `https://www.google.com/maps/embed/v1/place?key=AIzaSyD-dummy&q=${restaurant.latitud},${restaurant.longitud}&zoom=16`
+  const mapKey = import.meta.env.VITE_MAPS_KEY
+  const mapSrc = restaurant.latitud && mapKey && mapKey !== 'tu-google-maps-key'
+    ? `https://www.google.com/maps/embed/v1/place?key=${mapKey}&q=${restaurant.latitud},${restaurant.longitud}&zoom=16&language=es`
     : null
 
   return (
@@ -104,39 +281,27 @@ export default function RestaurantDetail() {
                   title="Mapa restaurante"
                 />
               ) : (
-                <div className="text-center text-stone-400">
+                <div className="text-center text-stone-400 px-4">
                   <div className="text-5xl mb-2">🗺️</div>
-                  <p className="text-sm">{restaurant.direccion}</p>
-                  <p className="text-xs mt-1">{restaurant.zona}, Ibagué</p>
+                  <p className="text-sm font-medium text-stone-600 dark:text-stone-300">{restaurant.direccion}</p>
+                  <p className="text-xs mt-1 mb-3">{restaurant.zona}, Ibagué</p>
+                  {restaurant.latitud && (
+                    <a
+                      href={`https://www.google.com/maps?q=${restaurant.latitud},${restaurant.longitud}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-xs bg-primary-500 text-white px-3 py-1.5 rounded-full hover:bg-primary-600 transition-colors"
+                    >
+                      <MapPin className="w-3 h-3" /> Ver en Google Maps
+                    </a>
+                  )}
                 </div>
               )}
             </div>
           </div>
 
-          {/* Menú */}
+          {/* Menú — Galería */}
           {restaurant.menu?.length > 0 && (
-            <div className="bg-white dark:bg-stone-800 rounded-2xl border border-stone-100 dark:border-stone-700 overflow-hidden">
-              <div className="p-4 border-b border-stone-100 dark:border-stone-700 flex items-center gap-2">
-                <ChefHat className="w-4 h-4 text-primary-500" />
-                <h2 className="font-semibold">Menú</h2>
-              </div>
-              <div className="divide-y divide-stone-100 dark:divide-stone-700">
-                {restaurant.menu.map(item => (
-                  <div key={item.id} className="flex items-center justify-between p-4 hover:bg-stone-50 dark:hover:bg-stone-700/50 transition-colors">
-                    <div>
-                      <p className="font-medium text-stone-800 dark:text-stone-200">{item.nombre}</p>
-                      <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">{item.descripcion}</p>
-                      <span className="text-xs bg-stone-100 dark:bg-stone-700 text-stone-500 px-2 py-0.5 rounded-full mt-1 inline-block">
-                        {item.categoria}
-                      </span>
-                    </div>
-                    <span className="font-semibold text-primary-500 text-sm ml-4 whitespace-nowrap">
-                      ${item.precio?.toLocaleString('es-CO')}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <MenuGallery items={restaurant.menu} />
           )}
         </div>
 

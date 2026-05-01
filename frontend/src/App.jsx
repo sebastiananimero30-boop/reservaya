@@ -10,6 +10,9 @@ const RestaurantDetail = lazy(() => import('./pages/RestaurantDetail'))
 const Login            = lazy(() => import('./pages/Login'))
 const Register         = lazy(() => import('./pages/Register'))
 const MyReservations   = lazy(() => import('./pages/MyReservations'))
+const OwnerDashboard   = lazy(() => import('./pages/OwnerDashboard'))
+const AdminDashboard   = lazy(() => import('./pages/AdminDashboard'))
+const Profile          = lazy(() => import('./pages/Profile'))
 
 export default function App() {
   const [dark, setDark] = useState(() => localStorage.getItem('theme') === 'dark')
@@ -32,6 +35,9 @@ export default function App() {
                 <Route path="/login"               element={<Login />} />
                 <Route path="/registro"            element={<Register />} />
                 <Route path="/mis-reservas"        element={<MyReservations />} />
+                <Route path="/propietario"         element={<OwnerDashboard />} />
+                <Route path="/admin"               element={<AdminDashboard />} />
+                <Route path="/perfil"              element={<Profile />} />
               </Routes>
             </Suspense>
           </main>

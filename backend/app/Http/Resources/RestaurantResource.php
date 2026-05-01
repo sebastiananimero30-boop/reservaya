@@ -12,6 +12,7 @@ class RestaurantResource extends JsonResource
         return [
             'id'           => $this->id,
             'name'         => $this->name,
+            'owner_id'     => $this->owner_id,
             'description'  => $this->description,
             'address'      => $this->address,
             'zone'         => $this->zone,
@@ -41,6 +42,12 @@ class RestaurantResource extends JsonResource
             }),
             'available_tables' => $this->whenLoaded('availableTables', function () {
                 return TableResource::collection($this->availableTables);
+            }),
+            'menu_items' => $this->whenLoaded('menuItems', function () {
+                return MenuItemResource::collection($this->menuItems);
+            }),
+            'menu' => $this->whenLoaded('availableMenuItems', function () {
+                return MenuItemResource::collection($this->availableMenuItems);
             }),
         ];
     }

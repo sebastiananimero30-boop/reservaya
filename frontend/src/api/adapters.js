@@ -10,6 +10,7 @@ export function adaptRestaurant(r) {
   if (!r) return null
   return {
     id:            r.id,
+    owner_id:      r.owner_id ?? null,
     nombre:        r.name        ?? r.nombre,
     descripcion:   r.description ?? r.descripcion,
     direccion:     r.address     ?? r.direccion,
@@ -23,6 +24,7 @@ export function adaptRestaurant(r) {
     categoria_icon:r.category?.icon ?? '🍽️',
     precio:        r.price_range ?? r.precio ?? '$$',
     imagen:        r.cover_photo ?? r.imagen ?? null,
+    foto_portada:  r.cover_photo ?? r.imagen ?? null,
     fotos:         r.photos      ?? r.fotos  ?? [],
     destacado:     r.is_featured ?? r.destacado ?? false,
     reservas_hoy:  r.today_reservations ?? r.reservas_hoy ?? 0,
@@ -31,7 +33,23 @@ export function adaptRestaurant(r) {
     capacidad:     r.capacity    ?? r.capacidad ?? 0,
     // Mesas: el backend devuelve available_tables con TableResource
     mesas:         (r.available_tables ?? r.mesas ?? []).map(adaptTable),
+    menu:          (r.menu ?? r.menu_items ?? []).map(adaptMenuItem),
     schedules:     r.schedules   ?? [],
+  }
+}
+
+export function adaptMenuItem(item) {
+  if (!item) return null
+  return {
+    id:            item.id,
+    restaurant_id: item.restaurant_id,
+    nombre:        item.name ?? item.nombre,
+    descripcion:   item.description ?? item.descripcion ?? '',
+    categoria:     item.category ?? item.categoria ?? 'General',
+    precio:        item.price ?? item.precio ?? 0,
+    imagen:        item.image_url ?? item.imagen ?? '',
+    disponible:    item.is_available ?? item.disponible ?? true,
+    orden:         item.sort_order ?? item.orden ?? 0,
   }
 }
 

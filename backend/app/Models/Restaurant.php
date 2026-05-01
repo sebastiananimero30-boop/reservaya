@@ -109,6 +109,19 @@ class Restaurant extends Model
         return $this->hasMany(Schedule::class)->orderBy('day_of_week');
     }
 
+    public function menuItems(): HasMany
+    {
+        return $this->hasMany(MenuItem::class)->orderBy('sort_order')->orderBy('name');
+    }
+
+    public function availableMenuItems(): HasMany
+    {
+        return $this->hasMany(MenuItem::class)
+            ->where('is_available', true)
+            ->orderBy('sort_order')
+            ->orderBy('name');
+    }
+
     // ── Helpers ────────────────────────────────────────────────────────────────
     public function updateRating(): void
     {

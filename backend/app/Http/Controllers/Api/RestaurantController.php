@@ -71,7 +71,7 @@ class RestaurantController extends Controller
      */
     public function show(Request $request, Restaurant $restaurant): JsonResponse
     {
-        $restaurant->load(['category', 'photos', 'schedules']);
+        $restaurant->load(['category', 'photos', 'schedules', 'availableMenuItems']);
 
         $data = (new RestaurantResource($restaurant))->toArray($request);
 

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Search, Moon, Sun, Menu, X, User, CalendarDays, LogOut } from 'lucide-react'
+import { Search, Moon, Sun, Menu, X, User, CalendarDays, LogOut, Utensils, ShieldCheck } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../../hooks/useAuth'
 import toast from 'react-hot-toast'
@@ -64,9 +64,9 @@ export default function Navbar({ dark, setDark }) {
               className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
             >
               <div className="w-7 h-7 rounded-full bg-primary-500 flex items-center justify-center text-white text-xs font-semibold">
-                {user.nombre?.[0]?.toUpperCase() || 'U'}
+                {(user.name ?? user.nombre)?.[0]?.toUpperCase() || 'U'}
               </div>
-              <span className="hidden md:block text-sm font-medium">{user.nombre?.split(' ')[0]}</span>
+              <span className="hidden md:block text-sm font-medium">{(user.name ?? user.nombre)?.split(' ')[0]}</span>
             </button>
             <AnimatePresence>
               {userMenuOpen && (
@@ -78,6 +78,18 @@ export default function Navbar({ dark, setDark }) {
                     className="flex items-center gap-3 px-4 py-3 hover:bg-stone-50 dark:hover:bg-stone-700 text-sm transition-colors">
                     <CalendarDays className="w-4 h-4 text-primary-500" /> Mis Reservas
                   </Link>
+                  {user.role === 'owner' && (
+                    <Link to="/propietario" onClick={() => setUserMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-stone-50 dark:hover:bg-stone-700 text-sm transition-colors">
+                      <Utensils className="w-4 h-4 text-primary-500" /> Panel propietario
+                    </Link>
+                  )}
+                  {user.role === 'admin' && (
+                    <Link to="/admin" onClick={() => setUserMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-stone-50 dark:hover:bg-stone-700 text-sm transition-colors">
+                      <ShieldCheck className="w-4 h-4 text-primary-500" /> Panel admin
+                    </Link>
+                  )}
                   <Link to="/perfil" onClick={() => setUserMenuOpen(false)}
                     className="flex items-center gap-3 px-4 py-3 hover:bg-stone-50 dark:hover:bg-stone-700 text-sm transition-colors">
                     <User className="w-4 h-4 text-primary-500" /> Mi Perfil
@@ -121,6 +133,12 @@ export default function Navbar({ dark, setDark }) {
                   <Link to="/login" onClick={() => setMenuOpen(false)} className="btn-outline py-2 text-sm flex-1 text-center">Iniciar sesión</Link>
                   <Link to="/registro" onClick={() => setMenuOpen(false)} className="btn-primary py-2 text-sm flex-1 text-center">Registrarse</Link>
                 </div>
+              )}
+              {user?.role === 'owner' && (
+                <Link to="/propietario" onClick={() => setMenuOpen(false)}
+                  className="flex items-center justify-center gap-2 btn-primary py-2 text-sm">
+                  <Utensils className="w-4 h-4" /> Panel propietario
+                </Link>
               )}
             </div>
           </motion.div>
