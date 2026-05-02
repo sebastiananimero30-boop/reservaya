@@ -13,6 +13,8 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class OwnerMenuController extends Controller
 {
+    // Devuelve solo los restaurantes que pertenecen al propietario autenticado.
+    // Un owner no puede ver ni tocar los restaurantes de otro
     public function restaurants(Request $request): AnonymousResourceCollection
     {
         $this->ensureOwner($request);
@@ -25,6 +27,8 @@ class OwnerMenuController extends Controller
         return RestaurantResource::collection($restaurants);
     }
 
+    // Lista todos los platos del menú de un restaurante,
+    // incluyendo los que están ocultos para que el owner pueda gestionarlos
     public function index(Request $request, Restaurant $restaurant): AnonymousResourceCollection
     {
         $this->authorizeRestaurant($request, $restaurant);
@@ -34,6 +38,7 @@ class OwnerMenuController extends Controller
         );
     }
 
+    // Agrega un nuevo plato al menú del restaurante
     public function store(Request $request, Restaurant $restaurant): JsonResponse
     {
         $this->authorizeRestaurant($request, $restaurant);
@@ -45,6 +50,8 @@ class OwnerMenuController extends Controller
         return response()->json(new MenuItemResource($item), 201);
     }
 
+    // Actualiza los datos de un plato existente.
+    // Uso partial: true para que no sea obligatorio mandar todos los campos
     public function update(Request $request, MenuItem $menuItem): JsonResponse
     {
         $this->authorizeRestaurant($request, $menuItem->restaurant);
@@ -54,6 +61,7 @@ class OwnerMenuController extends Controller
         return response()->json(new MenuItemResource($menuItem->fresh()));
     }
 
+    // Elimina un plato del menú permanentemente
     public function destroy(Request $request, MenuItem $menuItem): JsonResponse
     {
         $this->authorizeRestaurant($request, $menuItem->restaurant);
@@ -63,11 +71,13 @@ class OwnerMenuController extends Controller
         return response()->json(['message' => 'Plato eliminado correctamente.']);
     }
 
+    // Devuelve las reservas de un restaurante con soporte para filtrar por estado.
+    // El propietario puede ver confirmadas, pendientes, completadas o canceladas
     public function reservations(Request $request, Restaurant $restaurant): JsonResponse
     {
         $this->authorizeRestaurant($request, $restaurant);
 
-        $status = $request->get('status'); // filtro opcional
+        $status = $request->get('status');
 
         $query = \App\Models\Reservation::with(['user', 'table'])
             ->where('restaurant_id', $restaurant->id)
@@ -81,25 +91,27 @@ class OwnerMenuController extends Controller
 
         return response()->json([
             'data' => $reservations->map(fn ($r) => [
-                'id'         => $r->id,
-                'guest_name' => $r->user->name ?? 'Cliente',
-                'guest_email'=> $r->user->email ?? '',
-                'table'      => $r->table->name ?? "Mesa #{$r->table_id}",
-                'guests'     => $r->guests,
-                'start_time' => $r->start_time?->toIso8601String(),
-                'status'     => $r->status,
-                'notes'      => $r->notes,
+                'id'          => $r->id,
+                'guest_name'  => $r->user->name ?? 'Cliente',
+                'guest_email' => $r->user->email ?? '',
+                'table'       => $r->table->name ?? "Mesa #{$r->table_id}",
+                'guests'      => $r->guests,
+                'start_time'  => $r->start_time?->toIso8601String(),
+                'status'      => $r->status,
+                'notes'       => $r->notes,
             ]),
             'total'    => $reservations->total(),
             'per_page' => $reservations->perPage(),
         ]);
     }
 
+    // Permite al propietario cambiar el estado de una reserva de su restaurante.
+    // Puede confirmar, completar o cancelar
     public function updateReservationStatus(Request $request, \App\Models\Reservation $reservation): JsonResponse
     {
         $this->ensureOwner($request);
 
-        // Verificar que la reserva pertenece a un restaurante del owner
+        // Verifico que la reserva sea de un restaurante que le pertenece
         if ($reservation->restaurant->owner_id !== $request->user()->id) {
             abort(403, 'No tienes permiso para modificar esta reserva.');
         }
@@ -112,13 +124,17 @@ class OwnerMenuController extends Controller
 
         return response()->json(['message' => 'Estado actualizado.', 'status' => $reservation->status]);
     }
+
+    // Estadísticas del restaurante para el panel del propietario.
+    // Incluye reservas por hora del día, por día de la semana y un resumen general.
+    // La consulta SQL varía según si usamos PostgreSQL o SQLite
     public function stats(Request $request, Restaurant $restaurant): JsonResponse
     {
         $this->authorizeRestaurant($request, $restaurant);
 
         $driver = \DB::connection()->getDriverName();
 
-        // ── Reservas por hora del día ──────────────────────────────────────────
+        // Cuento reservas agrupadas por hora del día (de 10 a 23)
         if ($driver === 'pgsql') {
             $byHour = \DB::table('reservations')
                 ->selectRaw("EXTRACT(HOUR FROM start_time)::int AS hour, COUNT(*) AS total")
@@ -137,7 +153,7 @@ class OwnerMenuController extends Controller
                 ->get();
         }
 
-        // ── Reservas por día de la semana ──────────────────────────────────────
+        // Cuento reservas agrupadas por día de la semana
         if ($driver === 'pgsql') {
             $byDay = \DB::table('reservations')
                 ->selectRaw("EXTRACT(DOW FROM start_time)::int AS day_num, COUNT(*) AS total")
@@ -156,15 +172,15 @@ class OwnerMenuController extends Controller
                 ->get();
         }
 
+        // Me aseguro de que todos los días de la semana aparezcan aunque tengan 0 reservas
         $dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
         $byDayFormatted = collect(range(0, 6))->map(function ($d) use ($byDay, $dayNames) {
             $found = collect($byDay)->firstWhere('day_num', $d);
             return ['day' => $dayNames[$d], 'total' => $found ? (int) $found->total : 0];
         });
 
-        // ── Platos más pedidos (por nombre en notas — aproximación con menu) ──
-        // Como no hay tabla de pedidos, usamos los platos del menú ordenados por sort_order
-        // y mostramos los más visibles como proxy de popularidad
+        // Como no tenemos tabla de pedidos, uso los platos del menú como referencia.
+        // Los primeros en sort_order son los que el dueño considera más importantes
         $topItems = $restaurant->menuItems()
             ->where('is_available', true)
             ->orderBy('sort_order')
@@ -172,18 +188,18 @@ class OwnerMenuController extends Controller
             ->limit(8)
             ->get()
             ->map(fn ($item) => [
-                'nombre' => $item->name,
-                'precio' => (float) $item->price,
+                'nombre'    => $item->name,
+                'precio'    => (float) $item->price,
                 'categoria' => $item->category ?? 'General',
             ]);
 
-        // ── Resumen general ────────────────────────────────────────────────────
-        $totalReservations  = \App\Models\Reservation::where('restaurant_id', $restaurant->id)->count();
-        $confirmedCount     = \App\Models\Reservation::where('restaurant_id', $restaurant->id)->where('status', 'confirmed')->count();
-        $cancelledCount     = \App\Models\Reservation::where('restaurant_id', $restaurant->id)->where('status', 'cancelled')->count();
-        $completedCount     = \App\Models\Reservation::where('restaurant_id', $restaurant->id)->where('status', 'completed')->count();
-        $totalGuests        = \App\Models\Reservation::where('restaurant_id', $restaurant->id)->whereNotIn('status', ['cancelled'])->sum('guests');
-        $avgGuests          = \App\Models\Reservation::where('restaurant_id', $restaurant->id)->whereNotIn('status', ['cancelled'])->avg('guests');
+        // Números generales del restaurante
+        $totalReservations = \App\Models\Reservation::where('restaurant_id', $restaurant->id)->count();
+        $confirmedCount    = \App\Models\Reservation::where('restaurant_id', $restaurant->id)->where('status', 'confirmed')->count();
+        $cancelledCount    = \App\Models\Reservation::where('restaurant_id', $restaurant->id)->where('status', 'cancelled')->count();
+        $completedCount    = \App\Models\Reservation::where('restaurant_id', $restaurant->id)->where('status', 'completed')->count();
+        $totalGuests       = \App\Models\Reservation::where('restaurant_id', $restaurant->id)->whereNotIn('status', ['cancelled'])->sum('guests');
+        $avgGuests         = \App\Models\Reservation::where('restaurant_id', $restaurant->id)->whereNotIn('status', ['cancelled'])->avg('guests');
 
         return response()->json([
             'summary' => [
@@ -198,11 +214,12 @@ class OwnerMenuController extends Controller
                 $found = collect($byHour)->firstWhere('hour', $h);
                 return ['hora' => "{$h}:00", 'reservas' => $found ? (int) $found->total : 0];
             }),
-            'by_day'      => $byDayFormatted,
-            'menu_items'  => $topItems,
+            'by_day'     => $byDayFormatted,
+            'menu_items' => $topItems,
         ]);
     }
 
+    // Verifico que el usuario sea propietario antes de cualquier operación
     private function ensureOwner(Request $request): void
     {
         if (! $request->user()?->isOwner()) {
@@ -210,6 +227,8 @@ class OwnerMenuController extends Controller
         }
     }
 
+    // Verifico que el propietario sea dueño del restaurante que quiere modificar.
+    // Esto evita que un owner toque los restaurantes de otro
     private function authorizeRestaurant(Request $request, Restaurant $restaurant): void
     {
         $this->ensureOwner($request);
@@ -219,6 +238,8 @@ class OwnerMenuController extends Controller
         }
     }
 
+    // Valida los campos de un plato del menú.
+    // Con partial: true los campos no son obligatorios (para edición parcial)
     private function validateMenuItem(Request $request, bool $partial = false): array
     {
         $required = $partial ? 'sometimes' : 'required';

@@ -32,18 +32,19 @@ class Reservation extends Model
         ];
     }
 
-    // ── Boot: generar QR al crear ──────────────────────────────────────────────
+    // Antes de guardar una reserva nueva genero automáticamente el código QR.
+    // Uso la API pública de qrserver.com para no depender de librerías adicionales
     protected static function booted(): void
     {
         static::creating(function (Reservation $r) {
-            // QR como URL pública imaginaria; en prod usa simplesoftware/simple-qrcode
             $token = Str::random(32);
             $r->qr_code = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=reservaya-{$token}";
             $r->status  ??= 'confirmed';
         });
     }
 
-    // ── Relaciones ─────────────────────────────────────────────────────────────
+    // Relaciones del modelo
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

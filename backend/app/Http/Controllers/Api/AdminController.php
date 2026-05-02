@@ -17,7 +17,8 @@ use Illuminate\Support\Str;
 
 class AdminController extends Controller
 {
-    // ── Guard ──────────────────────────────────────────────────────────────────
+    // Verifico que el usuario que hace la petición sea administrador,
+    // si no lo es simplemente corto la ejecución con un 403
     private function ensureAdmin(Request $request): void
     {
         if (! $request->user()?->isAdmin()) {
@@ -25,7 +26,8 @@ class AdminController extends Controller
         }
     }
 
-    // ── GET /api/admin/owners ──────────────────────────────────────────────────
+    // Devuelve todos los propietarios registrados junto con cuántos
+    // restaurantes tiene cada uno asignados
     public function owners(Request $request): JsonResponse
     {
         $this->ensureAdmin($request);
@@ -40,7 +42,9 @@ class AdminController extends Controller
         ]);
     }
 
-    // ── POST /api/admin/owners ─────────────────────────────────────────────────
+    // Crea un nuevo propietario con los datos que manda el admin.
+    // La contraseña se genera automáticamente y se devuelve una sola vez,
+    // después ya no hay forma de recuperarla desde aquí
     public function createOwner(Request $request): JsonResponse
     {
         $this->ensureAdmin($request);
@@ -51,7 +55,7 @@ class AdminController extends Controller
             'phone' => 'nullable|string|max:20',
         ]);
 
-        // Generar contraseña aleatoria segura
+        // Genero una contraseña de 12 caracteres con letras y números
         $plainPassword = Str::password(12, letters: true, numbers: true, symbols: false);
 
         $owner = User::create([
@@ -64,12 +68,13 @@ class AdminController extends Controller
 
         return response()->json([
             'owner'    => new UserResource($owner),
-            'password' => $plainPassword, // Solo se devuelve una vez
+            'password' => $plainPassword, // esto solo se muestra aquí, después no se puede recuperar
             'message'  => 'Propietario creado. Guarda la contraseña, no se mostrará de nuevo.',
         ], 201);
     }
 
-    // ── DELETE /api/admin/owners/{user} ───────────────────────────────────────
+    // Elimina un propietario. Antes de borrarlo desasigno sus restaurantes
+    // para que no queden huérfanos, y también revoco sus tokens activos
     public function deleteOwner(Request $request, User $user): JsonResponse
     {
         $this->ensureAdmin($request);
@@ -78,7 +83,7 @@ class AdminController extends Controller
             abort(422, 'El usuario no es un propietario.');
         }
 
-        // Desasignar restaurantes (no eliminarlos)
+        // Dejo los restaurantes sin dueño en vez de eliminarlos
         $user->restaurants()->update(['owner_id' => null]);
         $user->tokens()->delete();
         $user->delete();
@@ -86,7 +91,8 @@ class AdminController extends Controller
         return response()->json(['message' => 'Propietario eliminado correctamente.']);
     }
 
-    // ── GET /api/admin/restaurants ────────────────────────────────────────────
+    // Lista todos los restaurantes de la plataforma con su categoría,
+    // fotos y el conteo de mesas activas
     public function restaurants(Request $request): JsonResponse
     {
         $this->ensureAdmin($request);
@@ -101,7 +107,8 @@ class AdminController extends Controller
         ]);
     }
 
-    // ── POST /api/admin/restaurants ───────────────────────────────────────────
+    // Crea un restaurante nuevo. También le genero un horario por defecto
+    // de lunes a domingo, con el lunes cerrado, para que no quede sin horario
     public function createRestaurant(Request $request): JsonResponse
     {
         $this->ensureAdmin($request);
@@ -125,7 +132,7 @@ class AdminController extends Controller
             'is_active' => true,
         ]);
 
-        // Horario por defecto (lun-dom, lunes cerrado)
+        // Creo el horario de la semana completa, el lunes lo dejo cerrado por defecto
         foreach (range(0, 6) as $day) {
             Schedule::create([
                 'restaurant_id' => $restaurant->id,
@@ -141,7 +148,8 @@ class AdminController extends Controller
         return response()->json(new RestaurantResource($restaurant), 201);
     }
 
-    // ── PATCH /api/admin/restaurants/{restaurant}/assign ──────────────────────
+    // Asigna o cambia el propietario de un restaurante.
+    // Si mandan owner_id null, el restaurante queda sin dueño
     public function assignOwner(Request $request, Restaurant $restaurant): JsonResponse
     {
         $this->ensureAdmin($request);
@@ -150,6 +158,7 @@ class AdminController extends Controller
             'owner_id' => 'nullable|exists:users,id',
         ]);
 
+        // Me aseguro de que el usuario que asigno tenga rol de propietario
         if ($data['owner_id']) {
             $owner = User::findOrFail($data['owner_id']);
             if (! $owner->isOwner()) {
@@ -165,7 +174,8 @@ class AdminController extends Controller
         ]);
     }
 
-    // ── PATCH /api/admin/restaurants/{restaurant}/cover ──────────────────────
+    // Actualiza la foto de portada de un restaurante.
+    // Si ya tiene una foto de portada la actualizo, si no la creo
     public function updateCover(Request $request, Restaurant $restaurant): JsonResponse
     {
         $this->ensureAdmin($request);
@@ -174,7 +184,6 @@ class AdminController extends Controller
             'url' => 'required|url|max:500',
         ]);
 
-        // Actualizar o crear la foto de portada
         $cover = $restaurant->photos()->where('is_cover', true)->first();
 
         if ($cover) {
@@ -195,7 +204,74 @@ class AdminController extends Controller
         ]);
     }
 
-    // ── GET /api/admin/categories ─────────────────────────────────────────────
+    // Estadísticas globales de la plataforma para el panel del admin.
+    // Incluye reservas por mes, por estado, restaurantes por categoría y resumen general.
+    // La consulta cambia un poco dependiendo de si usamos PostgreSQL o SQLite
+    public function stats(Request $request): JsonResponse
+    {
+        $this->ensureAdmin($request);
+
+        $driver = \DB::connection()->getDriverName();
+
+        // Cuento las reservas de los últimos 6 meses agrupadas por mes
+        if ($driver === 'pgsql') {
+            $byMonth = \DB::table('reservations')
+                ->selectRaw("TO_CHAR(start_time, 'Mon') AS mes, EXTRACT(MONTH FROM start_time)::int AS mes_num, COUNT(*) AS total")
+                ->where('start_time', '>=', now()->subMonths(6))
+                ->groupByRaw("TO_CHAR(start_time, 'Mon'), EXTRACT(MONTH FROM start_time)::int")
+                ->orderByRaw("EXTRACT(MONTH FROM start_time)::int")
+                ->get();
+        } else {
+            $byMonth = \DB::table('reservations')
+                ->selectRaw("strftime('%m', start_time) AS mes_num, COUNT(*) AS total")
+                ->where('start_time', '>=', now()->subMonths(6)->toDateTimeString())
+                ->groupByRaw("strftime('%m', start_time)")
+                ->orderByRaw("strftime('%m', start_time)")
+                ->get();
+        }
+
+        // Convierto el número del mes a su abreviatura en español
+        $monthNames = ['01'=>'Ene','02'=>'Feb','03'=>'Mar','04'=>'Abr','05'=>'May','06'=>'Jun','07'=>'Jul','08'=>'Ago','09'=>'Sep','10'=>'Oct','11'=>'Nov','12'=>'Dic'];
+        $byMonthFormatted = $byMonth->map(fn($r) => [
+            'mes'   => $monthNames[str_pad($r->mes_num, 2, '0', STR_PAD_LEFT)] ?? $r->mes_num,
+            'total' => (int) $r->total,
+        ]);
+
+        // Cuántas reservas hay por cada estado
+        $byStatus = \DB::table('reservations')
+            ->selectRaw('status, COUNT(*) as total')
+            ->groupBy('status')
+            ->get()
+            ->map(fn($r) => ['estado' => $r->status, 'total' => (int) $r->total]);
+
+        // Cuántos restaurantes hay por categoría, ordenados de mayor a menor
+        $byCategory = \DB::table('restaurants')
+            ->join('categories', 'restaurants.category_id', '=', 'categories.id')
+            ->selectRaw('categories.name AS categoria, categories.icon, COUNT(*) AS total')
+            ->groupBy('categories.id', 'categories.name', 'categories.icon')
+            ->orderByDesc('total')
+            ->get();
+
+        // Números generales de la plataforma
+        $summary = [
+            'total_restaurants'  => \App\Models\Restaurant::count(),
+            'total_owners'       => \App\Models\User::where('role', 'owner')->count(),
+            'total_clients'      => \App\Models\User::where('role', 'client')->count(),
+            'total_reservations' => \App\Models\Reservation::count(),
+            'total_confirmed'    => \App\Models\Reservation::where('status', 'confirmed')->count(),
+            'total_cancelled'    => \App\Models\Reservation::where('status', 'cancelled')->count(),
+            'total_guests'       => (int) \App\Models\Reservation::whereNotIn('status', ['cancelled'])->sum('guests'),
+        ];
+
+        return response()->json([
+            'summary'     => $summary,
+            'by_month'    => $byMonthFormatted,
+            'by_status'   => $byStatus,
+            'by_category' => $byCategory,
+        ]);
+    }
+
+    // Devuelve todas las categorías disponibles para el formulario de crear restaurante
     public function categories(Request $request): JsonResponse
     {
         $this->ensureAdmin($request);

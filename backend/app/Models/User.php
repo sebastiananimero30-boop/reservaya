@@ -20,6 +20,7 @@ class User extends Authenticatable
         'phone',
     ];
 
+    // La contraseña y el token de remember nunca se exponen en las respuestas JSON
     protected $hidden = [
         'password',
         'remember_token',
@@ -29,16 +30,20 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'password'          => 'hashed',
         ];
     }
 
-    // ── Roles ──────────────────────────────────────────────────────────────────
-    public function isAdmin(): bool    { return $this->role === 'admin'; }
-    public function isOwner(): bool    { return $this->role === 'owner'; }
-    public function isClient(): bool   { return $this->role === 'client'; }
+    // Métodos de ayuda para verificar el rol del usuario.
+    // Los uso en los controladores para autorizar acciones
 
-    // ── Relaciones ─────────────────────────────────────────────────────────────
+    public function isAdmin(): bool  { return $this->role === 'admin'; }
+    public function isOwner(): bool  { return $this->role === 'owner'; }
+    public function isClient(): bool { return $this->role === 'client'; }
+
+    // Relaciones del modelo
+
+    // Un propietario puede tener varios restaurantes asignados
     public function restaurants(): HasMany
     {
         return $this->hasMany(Restaurant::class, 'owner_id');

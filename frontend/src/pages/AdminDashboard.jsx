@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Users, Store, Plus, Trash2, Copy, Check, Eye, EyeOff,
-  Loader2, ShieldCheck, X, ChevronDown, Building2, ImagePlus
+  Loader2, ShieldCheck, X, ChevronDown, Building2, ImagePlus, BarChart2
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Link } from 'react-router-dom'
@@ -15,10 +15,12 @@ import {
   getAdminCategories, updateRestaurantCover,
 } from '../api/admin'
 import { adaptRestaurant } from '../api/adapters'
+import AdminStats from '../components/admin/AdminStats'
 
 const TABS = [
   { id: 'owners',      label: 'Propietarios', icon: Users },
   { id: 'restaurants', label: 'Restaurantes', icon: Store },
+  { id: 'stats',       label: 'Estadísticas', icon: BarChart2 },
 ]
 
 function Modal({ open, onClose, title, children }) {
@@ -101,7 +103,6 @@ function CredentialsCard({ email, password, onClose }) {
     </div>
   )
 }
-
 function OwnersTab() {
   const qc = useQueryClient()
   const [showModal, setShowModal] = useState(false)
@@ -457,6 +458,7 @@ export default function AdminDashboard() {
         <motion.div key={tab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.15 }}>
           {tab === 'owners'      && <OwnersTab />}
           {tab === 'restaurants' && <RestaurantsTab />}
+          {tab === 'stats'       && <AdminStats />}
         </motion.div>
       </AnimatePresence>
     </div>

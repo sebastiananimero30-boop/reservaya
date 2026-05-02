@@ -12,7 +12,8 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    // POST /api/auth/register
+    // Registro de un nuevo usuario. Por defecto se crea con rol cliente,
+    // los propietarios los crea el administrador desde su panel
     public function register(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -31,7 +32,8 @@ class AuthController extends Controller
         ], 201);
     }
 
-    // POST /api/auth/login
+    // Inicio de sesión. Verifico las credenciales y genero un token nuevo.
+    // Elimino los tokens anteriores para que solo haya uno activo a la vez
     public function login(Request $request): JsonResponse
     {
         $request->validate([
@@ -47,7 +49,7 @@ class AuthController extends Controller
             ]);
         }
 
-        // Revocar tokens anteriores (opcional — un token activo por usuario)
+        // Revoco los tokens anteriores antes de crear uno nuevo
         $user->tokens()->delete();
         $token = $user->createToken('api-token')->plainTextToken;
 
@@ -57,7 +59,7 @@ class AuthController extends Controller
         ]);
     }
 
-    // POST /api/auth/logout
+    // Cierre de sesión. Solo elimino el token actual, no todos
     public function logout(Request $request): JsonResponse
     {
         $request->user()->currentAccessToken()->delete();
@@ -65,7 +67,8 @@ class AuthController extends Controller
         return response()->json(['message' => 'Sesión cerrada correctamente.']);
     }
 
-    // GET /api/auth/me
+    // Devuelve los datos del usuario autenticado.
+    // El frontend lo usa al recargar la página para restaurar la sesión
     public function me(Request $request): JsonResponse
     {
         return response()->json(['user' => new UserResource($request->user())]);

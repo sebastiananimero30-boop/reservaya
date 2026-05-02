@@ -13,31 +13,31 @@ use Illuminate\Support\Facades\DB;
 
 class RestaurantController extends Controller
 {
-    /**
-     * GET /api/restaurants
-     * Params: category (slug), zone, date, time, guests, per_page
-     */
+    // Lista los restaurantes activos con soporte para varios filtros.
+    // Si se pasan fecha, hora y personas también filtra por disponibilidad real de mesas
     public function index(Request $request): AnonymousResourceCollection
     {
         $query = Restaurant::with(['category', 'photos'])
             ->withCount(['tables as tables_count' => fn ($q) => $q->where('is_active', true)])
             ->active();
 
-        // Filtro por categoría (slug)
+        // Filtro por categoría usando el slug o el nombre
         if ($request->filled('category')) {
             $query->byCategory($request->category);
         }
 
-        // Filtro por zona / dirección
+        // Filtro por zona o dirección
         if ($request->filled('zone')) {
             $query->byZone($request->zone);
         }
 
+        // Búsqueda por texto en nombre, descripción, dirección o zona
         if ($request->filled('search')) {
             $query->search($request->search);
         }
 
-        // Filtro por disponibilidad de mesas en fecha+hora+guests
+        // Si el cliente manda fecha y hora, solo muestro restaurantes
+        // que tengan al menos una mesa disponible para ese horario y número de personas
         if ($request->filled('date') && $request->filled('time')) {
             $startTime = $request->date . ' ' . $request->time;
             $guests    = (int) $request->get('guests', 1);
@@ -57,7 +57,7 @@ class RestaurantController extends Controller
             });
         }
 
-        // Ordenar por rating desc por defecto
+        // Ordeno por calificación de mayor a menor
         $query->orderByDesc('rating');
 
         $restaurants = $query->paginate($request->get('per_page', 12));
@@ -65,17 +65,16 @@ class RestaurantController extends Controller
         return RestaurantResource::collection($restaurants);
     }
 
-    /**
-     * GET /api/restaurants/{id}
-     * Params opcionales: date, time, guests
-     */
+    // Devuelve el detalle completo de un restaurante.
+    // Si se pasan fecha, hora y personas también calculo las mesas disponibles
     public function show(Request $request, Restaurant $restaurant): JsonResponse
     {
         $restaurant->load(['category', 'photos', 'schedules', 'availableMenuItems']);
 
         $data = (new RestaurantResource($restaurant))->toArray($request);
 
-        // Mesas disponibles si se pasan parámetros de búsqueda
+        // Si el cliente está buscando para una fecha específica, calculo
+        // qué mesas están libres en ese horario
         if ($request->filled('date') && $request->filled('time')) {
             $startTime = $request->date . ' ' . $request->time;
             $guests    = (int) $request->get('guests', 1);
@@ -83,7 +82,7 @@ class RestaurantController extends Controller
             $availableTables = $restaurant->availableTables($startTime, $guests);
             $data['available_tables'] = TableResource::collection($availableTables);
         } else {
-            // Sin filtro: devolver todas las mesas activas
+            // Sin filtro de fecha devuelvo todas las mesas activas
             $data['available_tables'] = TableResource::collection(
                 $restaurant->tables()->where('is_active', true)->get()
             );
@@ -92,10 +91,8 @@ class RestaurantController extends Controller
         return response()->json($data);
     }
 
-    /**
-     * GET /api/restaurants/{id}/tables
-     * Mesas disponibles para una fecha/hora específica
-     */
+    // Devuelve las mesas disponibles para una fecha, hora y número de personas específicos.
+    // Este endpoint lo usa el formulario de reserva para mostrar las opciones al cliente
     public function availableTables(Request $request, Restaurant $restaurant): JsonResponse
     {
         $request->validate([

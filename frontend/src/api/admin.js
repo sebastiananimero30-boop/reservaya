@@ -26,3 +26,6 @@ export const updateRestaurantCover = (restaurantId, url) =>
 // ── Categorías ────────────────────────────────────────────────────────────────
 export const getAdminCategories = () =>
   api.get('/admin/categories').then(r => r.data)
+
+export const getAdminStats = () =>
+  api.get('/admin/stats').then(r => r.data)

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Mail\ReservationConfirmed;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ReservationResource;
 use App\Models\Reservation;
@@ -11,15 +12,14 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class ReservationController extends Controller
 {
-    /**
-     * GET /api/my/reservations
-     * Reservas del usuario autenticado
-     */
+    // Devuelve todas las reservas del usuario autenticado,
+    // ordenadas de la más reciente a la más antigua
     public function myReservations(Request $request): AnonymousResourceCollection
     {
         $reservations = Reservation::with(['restaurant', 'table'])
@@ -30,9 +30,10 @@ class ReservationController extends Controller
         return ReservationResource::collection($reservations);
     }
 
-    /**
-     * POST /api/reservations
-     */
+    // Crea una nueva reserva. Antes de guardarla hago tres verificaciones:
+    // 1. Que la mesa pertenezca al restaurante indicado
+    // 2. Que la capacidad sea suficiente para el número de personas
+    // 3. Que no haya otra reserva solapada en esa mesa (±90 minutos)
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -43,20 +44,21 @@ class ReservationController extends Controller
             'notes'         => 'nullable|string|max:500',
         ]);
 
-        // Verificar que la mesa pertenece al restaurante
+        // Verifico que la mesa exista y esté activa en ese restaurante
         $table = Table::where('id', $data['table_id'])
             ->where('restaurant_id', $data['restaurant_id'])
             ->where('is_active', true)
             ->firstOrFail();
 
-        // Verificar capacidad
+        // No tiene sentido reservar una mesa para más personas de las que caben
         if ($data['guests'] > $table->seats) {
             return response()->json([
                 'message' => "La mesa {$table->name} tiene capacidad para {$table->seats} personas.",
             ], 422);
         }
 
-        // Verificar disponibilidad (anti-solapamiento ±90 min)
+        // Calculo el rango de tiempo de la reserva (90 minutos por defecto)
+        // y busco si hay algún conflicto con reservas existentes
         $start = Carbon::parse($data['start_time']);
         $end   = $start->copy()->addMinutes(90);
         $overlapEndExpr = DB::connection()->getDriverName() === 'pgsql'
@@ -86,15 +88,24 @@ class ReservationController extends Controller
 
         $reservation->load(['restaurant', 'table']);
 
+        // Intento enviar el email de confirmación con los detalles y el QR.
+        // Si falla por algún problema de configuración no rompo la reserva,
+        // solo lo registro en el log para revisarlo después
+        try {
+            Mail::to($request->user()->email)->send(
+                new ReservationConfirmed($reservation->load(['restaurant', 'table', 'user']))
+            );
+        } catch (\Exception $e) {
+            \Log::warning('Email de confirmación no enviado: ' . $e->getMessage());
+        }
+
         return response()->json(new ReservationResource($reservation), 201);
     }
 
-    /**
-     * GET /api/reservations/{id}
-     */
+    // Devuelve el detalle de una reserva específica.
+    // Solo puede verla el cliente que la hizo o un administrador
     public function show(Request $request, Reservation $reservation): JsonResponse
     {
-        // Solo el dueño de la reserva o admin puede verla
         if ($request->user()->id !== $reservation->user_id && ! $request->user()->isAdmin()) {
             abort(403, 'No tienes permiso para ver esta reserva.');
         }
@@ -104,9 +115,8 @@ class ReservationController extends Controller
         return response()->json(new ReservationResource($reservation));
     }
 
-    /**
-     * PATCH /api/reservations/{id}/cancel
-     */
+    // Cancela una reserva. Solo puede hacerlo el cliente dueño de la reserva
+    // o un administrador. Si ya está cancelada no hago nada
     public function cancel(Request $request, Reservation $reservation): JsonResponse
     {
         if ($request->user()->id !== $reservation->user_id && ! $request->user()->isAdmin()) {
