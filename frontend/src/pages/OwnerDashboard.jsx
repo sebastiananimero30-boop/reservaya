@@ -6,6 +6,7 @@ import toast from 'react-hot-toast'
 import clsx from 'clsx'
 import { useAuth } from '../hooks/useAuth'
 import Spinner from '../components/common/Spinner'
+import ImageUploader from '../components/common/ImageUploader'
 import { adaptMenuItem, adaptRestaurant } from '../api/adapters'
 import {
   createMenuItem, deleteMenuItem, getOwnerMenu,
@@ -259,8 +260,12 @@ export default function OwnerDashboard() {
                   <input type="number" min="0" step="100" className="input-base mt-1.5" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} placeholder="28000" />
                 </label>
                 <label className="block">
-                  <span className="text-sm font-medium text-stone-700 dark:text-stone-300">URL de imagen</span>
-                  <input className="input-base mt-1.5" value={form.image_url} onChange={e => setForm({ ...form, image_url: e.target.value })} placeholder="https://..." />
+                  <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Imagen del plato</span>
+                  <ImageUploader
+                    currentUrl={form.image_url}
+                    onUpload={(url) => setForm({ ...form, image_url: url })}
+                    label="Subir foto del plato"
+                  />
                 </label>
                 <label className="block">
                   <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Descripcion</span>

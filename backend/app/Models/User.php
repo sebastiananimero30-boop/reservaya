@@ -18,6 +18,7 @@ class User extends Authenticatable
         'password',
         'role',
         'phone',
+        'google_id',
     ];
 
     // La contraseña y el token de remember nunca se exponen en las respuestas JSON

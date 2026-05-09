@@ -1,62 +1,123 @@
 {
   "info": {
     "name": "ReservaYa API",
-    "description": "Colección completa de endpoints para ReservaYa Backend Laravel 11",
+    "description": "Colección completa de endpoints para ReservaYa — Laravel 11 + Sanctum.\n\n**Cómo usar:**\n1. Ejecuta 'Login' primero — el token se guarda automáticamente\n2. Todos los endpoints con (auth) usan ese token\n3. Cambia la variable base_url si usas producción",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "base_url", "value": "http://localhost:8000/api" },
-    { "key": "token",    "value": "" }
+    { "key": "base_url", "value": "http://localhost:8000/api", "description": "URL base de la API" },
+    { "key": "token",    "value": "", "description": "Token Bearer — se llena automáticamente al hacer login" }
   ],
   "item": [
     {
-      "name": "🔐 Auth",
+      "name": "🔐 Autenticación",
       "item": [
         {
-          "name": "Registro",
+          "name": "Registro de cliente",
           "request": {
             "method": "POST",
             "url": "{{base_url}}/auth/register",
-            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Nuevo Usuario\",\n  \"email\": \"nuevo@ejemplo.com\",\n  \"password\": \"password\",\n  \"password_confirmation\": \"password\",\n  \"phone\": \"+51 999 888 777\"\n}" }
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Juan Cliente\",\n  \"email\": \"juan@test.com\",\n  \"password\": \"password123\",\n  \"password_confirmation\": \"password123\",\n  \"phone\": \"+57 310 000 0000\"\n}"
+            }
           }
         },
         {
-          "name": "Login",
+          "name": "Login — Admin",
+          "event": [{ "listen": "test", "script": { "exec": ["const r = pm.response.json();", "if (r.token) pm.collectionVariables.set('token', r.token);", "console.log('Token guardado:', r.token);"] } }],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/login",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@reservaya.app\",\n  \"password\": \"admin123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login — Propietario",
           "event": [{ "listen": "test", "script": { "exec": ["const r = pm.response.json();", "if (r.token) pm.collectionVariables.set('token', r.token);"] } }],
           "request": {
             "method": "POST",
             "url": "{{base_url}}/auth/login",
-            "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"email\": \"client@test.app\",\n  \"password\": \"password\"\n}" }
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"owner@pizzeria.com\",\n  \"password\": \"owner123\"\n}"
+            }
           }
         },
         {
-          "name": "Mi Perfil (auth)",
+          "name": "Login — Cliente",
+          "event": [{ "listen": "test", "script": { "exec": ["const r = pm.response.json();", "if (r.token) pm.collectionVariables.set('token', r.token);"] } }],
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/auth/login",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"client@test.app\",\n  \"password\": \"client123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Mi perfil (auth)",
           "request": {
             "method": "GET",
             "url": "{{base_url}}/auth/me",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Accept", "value": "application/json" }]
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ]
           }
         },
         {
-          "name": "Logout (auth)",
+          "name": "Cerrar sesión (auth)",
           "request": {
             "method": "POST",
             "url": "{{base_url}}/auth/logout",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Accept", "value": "application/json" }]
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ]
           }
         }
       ]
     },
     {
-      "name": "🍽️ Restaurantes",
+      "name": "🍽️ Restaurantes (público)",
       "item": [
         {
           "name": "Listar todos",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{base_url}}/restaurants", "host": ["{{base_url}}"], "path": ["restaurants"] },
+            "url": "{{base_url}}/restaurants",
+            "header": [{ "key": "Accept", "value": "application/json" }]
+          }
+        },
+        {
+          "name": "Buscar por nombre",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/restaurants?search=italiana",
+              "query": [{ "key": "search", "value": "italiana" }]
+            },
             "header": [{ "key": "Accept", "value": "application/json" }]
           }
         },
@@ -64,15 +125,26 @@
           "name": "Filtrar por categoría",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{base_url}}/restaurants?category=italiana", "host": ["{{base_url}}"], "path": ["restaurants"], "query": [{ "key": "category", "value": "italiana" }] },
+            "url": {
+              "raw": "{{base_url}}/restaurants?category=italiana",
+              "query": [{ "key": "category", "value": "italiana" }]
+            },
             "header": [{ "key": "Accept", "value": "application/json" }]
           }
         },
         {
-          "name": "Filtrar por zona + fecha + hora",
+          "name": "Filtrar por zona + disponibilidad",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{base_url}}/restaurants?zone=Miraflores&date=2025-02-20&time=20:00&guests=4", "host": ["{{base_url}}"], "path": ["restaurants"], "query": [{ "key": "zone", "value": "Miraflores" }, { "key": "date", "value": "2025-02-20" }, { "key": "time", "value": "20:00" }, { "key": "guests", "value": "4" }] },
+            "url": {
+              "raw": "{{base_url}}/restaurants?zone=Macarena&date=2025-12-20&time=20:00&guests=2",
+              "query": [
+                { "key": "zone", "value": "Macarena" },
+                { "key": "date", "value": "2025-12-20" },
+                { "key": "time", "value": "20:00" },
+                { "key": "guests", "value": "2" }
+              ]
+            },
             "header": [{ "key": "Accept", "value": "application/json" }]
           }
         },
@@ -80,7 +152,14 @@
           "name": "Detalle de restaurante",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{base_url}}/restaurants/1?date=2025-02-20&time=20:00&guests=2", "host": ["{{base_url}}"], "path": ["restaurants", "1"], "query": [{ "key": "date", "value": "2025-02-20" }, { "key": "time", "value": "20:00" }, { "key": "guests", "value": "2" }] },
+            "url": {
+              "raw": "{{base_url}}/restaurants/1?date=2025-12-20&time=20:00&guests=2",
+              "query": [
+                { "key": "date", "value": "2025-12-20" },
+                { "key": "time", "value": "20:00" },
+                { "key": "guests", "value": "2" }
+              ]
+            },
             "header": [{ "key": "Accept", "value": "application/json" }]
           }
         },
@@ -88,14 +167,21 @@
           "name": "Mesas disponibles",
           "request": {
             "method": "GET",
-            "url": { "raw": "{{base_url}}/restaurants/1/tables?date=2025-02-20&time=20:00&guests=2", "host": ["{{base_url}}"], "path": ["restaurants", "1", "tables"], "query": [{ "key": "date", "value": "2025-02-20" }, { "key": "time", "value": "20:00" }, { "key": "guests", "value": "2" }] },
+            "url": {
+              "raw": "{{base_url}}/restaurants/1/availability?date=2025-12-20&time=20:00&guests=2",
+              "query": [
+                { "key": "date", "value": "2025-12-20" },
+                { "key": "time", "value": "20:00" },
+                { "key": "guests", "value": "2" }
+              ]
+            },
             "header": [{ "key": "Accept", "value": "application/json" }]
           }
         }
       ]
     },
     {
-      "name": "📂 Categorías",
+      "name": "📂 Categorías (público)",
       "item": [
         {
           "name": "Listar categorías",
@@ -108,39 +194,368 @@
       ]
     },
     {
-      "name": "📅 Reservas",
+      "name": "📅 Reservas (auth cliente)",
       "item": [
         {
-          "name": "Crear reserva (auth)",
+          "name": "Crear reserva",
           "request": {
             "method": "POST",
             "url": "{{base_url}}/reservations",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Accept", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"restaurant_id\": 1,\n  \"table_id\": 1,\n  \"start_time\": \"2025-02-25 20:00:00\",\n  \"guests\": 2,\n  \"notes\": \"Mesa cerca a la ventana, por favor.\"\n}" }
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"restaurant_id\": 1,\n  \"table_id\": 1,\n  \"start_time\": \"2025-12-25 20:00:00\",\n  \"guests\": 2,\n  \"notes\": \"Mesa cerca a la ventana por favor\"\n}"
+            }
           }
         },
         {
-          "name": "Mis reservas (auth)",
+          "name": "Mis reservas",
           "request": {
             "method": "GET",
             "url": "{{base_url}}/my/reservations",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Accept", "value": "application/json" }]
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ]
           }
         },
         {
-          "name": "Ver reserva (auth)",
+          "name": "Ver reserva por ID",
           "request": {
             "method": "GET",
             "url": "{{base_url}}/reservations/1",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Accept", "value": "application/json" }]
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ]
           }
         },
         {
-          "name": "Cancelar reserva (auth)",
+          "name": "Cancelar reserva",
           "request": {
             "method": "PATCH",
             "url": "{{base_url}}/reservations/1/cancel",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }, { "key": "Accept", "value": "application/json" }]
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "🧑‍🍳 Panel Propietario (auth owner)",
+      "item": [
+        {
+          "name": "Mis restaurantes",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/owner/restaurants",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ]
+          }
+        },
+        {
+          "name": "Menú del restaurante",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/owner/restaurants/1/menu",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ]
+          }
+        },
+        {
+          "name": "Agregar plato al menú",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/owner/restaurants/1/menu",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Pizza Margherita\",\n  \"description\": \"Tomate, mozzarella y albahaca fresca\",\n  \"category\": \"Pizzas\",\n  \"price\": 32000,\n  \"is_available\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Editar plato",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/owner/menu-items/1",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 35000,\n  \"is_available\": false\n}"
+            }
+          }
+        },
+        {
+          "name": "Eliminar plato",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/owner/menu-items/1",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ]
+          }
+        },
+        {
+          "name": "Reservas del restaurante",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/owner/restaurants/1/reservations",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ]
+          }
+        },
+        {
+          "name": "Reservas filtradas por estado",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/owner/restaurants/1/reservations?status=confirmed",
+              "query": [{ "key": "status", "value": "confirmed" }]
+            },
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ]
+          }
+        },
+        {
+          "name": "Cambiar estado de reserva",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/owner/reservations/1/status",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"completed\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Estadísticas del restaurante",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/owner/restaurants/1/stats",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "🛡️ Panel Admin (auth admin)",
+      "item": [
+        {
+          "name": "Listar propietarios",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/admin/owners",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ]
+          }
+        },
+        {
+          "name": "Crear propietario",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/admin/owners",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Carlos Restaurantero\",\n  \"email\": \"carlos@mirestaurante.com\",\n  \"phone\": \"+57 315 000 0000\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Eliminar propietario",
+          "request": {
+            "method": "DELETE",
+            "url": "{{base_url}}/admin/owners/2",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ]
+          }
+        },
+        {
+          "name": "Listar restaurantes",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/admin/restaurants",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ]
+          }
+        },
+        {
+          "name": "Crear restaurante",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/admin/restaurants",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"La Nueva Trattoria\",\n  \"description\": \"Cocina italiana auténtica\",\n  \"address\": \"Calle 45 #12-34, El Vergel\",\n  \"zone\": \"El Vergel\",\n  \"phone\": \"+57 315 678 9012\",\n  \"category_id\": 2,\n  \"latitude\": 4.4521,\n  \"longitude\": -75.2089,\n  \"capacity\": 40\n}"
+            }
+          }
+        },
+        {
+          "name": "Asignar propietario a restaurante",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/admin/restaurants/1/assign",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"owner_id\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "Cambiar foto de portada",
+          "request": {
+            "method": "PATCH",
+            "url": "{{base_url}}/admin/restaurants/1/cover",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Estadísticas globales",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/admin/stats",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ]
+          }
+        },
+        {
+          "name": "Listar categorías",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/admin/categories",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "🔒 Pruebas de seguridad",
+      "item": [
+        {
+          "name": "Sin token — debe dar 401",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/my/reservations",
+            "header": [{ "key": "Accept", "value": "application/json" }]
+          }
+        },
+        {
+          "name": "Cliente accede a admin — debe dar 403",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/admin/owners",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Accept", "value": "application/json" }
+            ]
+          }
+        },
+        {
+          "name": "Owner accede a admin — debe dar 403",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/admin/owners",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Hack\",\n  \"email\": \"hack@test.com\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Reserva en el pasado — debe dar 422",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/reservations",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"restaurant_id\": 1,\n  \"table_id\": 1,\n  \"start_time\": \"2020-01-01 20:00:00\",\n  \"guests\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "SQL Injection en búsqueda — debe ser seguro",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/restaurants?search=' OR 1=1 --",
+              "query": [{ "key": "search", "value": "' OR 1=1 --" }]
+            },
+            "header": [{ "key": "Accept", "value": "application/json" }]
           }
         }
       ]
@@ -149,7 +564,7 @@
       "name": "❤️ Health Check",
       "item": [
         {
-          "name": "Health",
+          "name": "Estado de la API",
           "request": {
             "method": "GET",
             "url": "{{base_url}}/health",

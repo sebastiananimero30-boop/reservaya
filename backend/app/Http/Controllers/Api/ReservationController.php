@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Mail\ReservationConfirmed;
+use App\Mail\OwnerNewReservation;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ReservationResource;
 use App\Models\Reservation;
@@ -39,7 +40,7 @@ class ReservationController extends Controller
         $data = $request->validate([
             'restaurant_id' => 'required|exists:restaurants,id',
             'table_id'      => 'required|exists:tables,id',
-            'start_time'    => 'required|date|after:now',
+            'start_time'    => 'required|date|after:' . now()->subMinutes(10)->toDateTimeString(),
             'guests'        => 'required|integer|min:1|max:20',
             'notes'         => 'nullable|string|max:500',
         ]);
@@ -88,15 +89,23 @@ class ReservationController extends Controller
 
         $reservation->load(['restaurant', 'table']);
 
-        // Intento enviar el email de confirmación con los detalles y el QR.
-        // Si falla por algún problema de configuración no rompo la reserva,
-        // solo lo registro en el log para revisarlo después
+        // Envío email al cliente con los detalles y el QR
         try {
-            Mail::to($request->user()->email)->send(
-                new ReservationConfirmed($reservation->load(['restaurant', 'table', 'user']))
-            );
+            Mail::to($request->user()->email)
+                ->send(new ReservationConfirmed($reservation->load(['restaurant', 'table', 'user'])));
         } catch (\Exception $e) {
-            \Log::warning('Email de confirmación no enviado: ' . $e->getMessage());
+            \Log::warning('Email cliente no enviado: ' . $e->getMessage());
+        }
+
+        // Envío email al propietario notificándole la nueva reserva
+        try {
+            $owner = $reservation->restaurant->owner;
+            if ($owner && $owner->email) {
+                Mail::to($owner->email)
+                    ->send(new OwnerNewReservation($reservation));
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Email propietario no enviado: ' . $e->getMessage());
         }
 
         return response()->json(new ReservationResource($reservation), 201);

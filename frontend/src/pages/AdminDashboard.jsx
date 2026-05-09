@@ -9,6 +9,7 @@ import toast from 'react-hot-toast'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import Spinner from '../components/common/Spinner'
+import ImageUploader from '../components/common/ImageUploader'
 import {
   getOwners, createOwner, deleteOwner,
   getAdminRestaurants, createRestaurant, assignOwnerToRestaurant,
@@ -98,6 +99,7 @@ function CredentialsCard({ email, password, onClose }) {
             className="flex-1 border-2 border-stone-200 dark:border-stone-600 rounded-xl py-2.5 text-sm font-semibold hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors">
             Cerrar
           </button>
+          
         </div>
       </motion.div>
     </div>
@@ -327,18 +329,24 @@ function RestaurantsTab() {
           <Modal open={!!coverModal} onClose={() => { setCoverModal(null); setCoverUrl('') }} title="Foto de portada">
             <div className="space-y-4">
               <p className="text-sm text-stone-500">Restaurante: <strong className="text-stone-800 dark:text-stone-200">{coverModal.nombre}</strong></p>
-              {coverUrl && (
-                <div className="w-full h-40 rounded-2xl overflow-hidden bg-stone-100 dark:bg-stone-700">
-                  <img src={coverUrl} alt="Preview" className="w-full h-full object-cover" onError={e => { e.target.style.display = 'none' }} />
-                </div>
-              )}
-              <label className="block">
-                <span className="text-sm font-medium text-stone-700 dark:text-stone-300">URL de la foto *</span>
-                <input className="input-base mt-1.5" value={coverUrl} onChange={e => setCoverUrl(e.target.value)} placeholder="https://images.unsplash.com/..." />
-              </label>
-              <p className="text-xs text-stone-400 bg-stone-50 dark:bg-stone-700 rounded-xl p-3">
-                💡 Pega una URL de Google Images, Unsplash o imgbb.com. Pronto podrás subir fotos directamente.
-              </p>
+
+              <ImageUploader
+                currentUrl={coverUrl}
+                onUpload={(url) => setCoverUrl(url)}
+                label="Subir foto de portada"
+              />
+
+              {/* También permite pegar URL manualmente */}
+              <div>
+                <p className="text-xs text-stone-400 mb-1.5">O pega una URL directamente:</p>
+                <input
+                  className="input-base text-sm"
+                  value={coverUrl}
+                  onChange={e => setCoverUrl(e.target.value)}
+                  placeholder="https://images.unsplash.com/..."
+                />
+              </div>
+
               <div className="flex gap-2">
                 <button type="button" onClick={() => { setCoverModal(null); setCoverUrl('') }} className="btn-outline flex-1">Cancelar</button>
                 <button onClick={() => coverMutation.mutate()} disabled={!coverUrl.trim() || coverMutation.isPending}

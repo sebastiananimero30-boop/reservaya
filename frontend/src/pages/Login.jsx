@@ -5,6 +5,7 @@ import { Mail, Lock, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import toast from 'react-hot-toast'
+import GoogleLoginButton from '../components/auth/GoogleLoginButton'
 
 export default function Login() {
   const { login } = useAuth()
@@ -40,6 +41,16 @@ export default function Login() {
         </div>
 
         <div className="card p-8">
+          {/* Botón de Google */}
+          <GoogleLoginButton label="Iniciar sesión con Google" />
+
+          {/* Separador */}
+          <div className="flex items-center gap-3 my-5">
+            <div className="flex-1 h-px bg-stone-200 dark:bg-stone-700" />
+            <span className="text-xs text-stone-400 font-medium">o con tu email</span>
+            <div className="flex-1 h-px bg-stone-200 dark:bg-stone-700" />
+          </div>
+
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1.5">

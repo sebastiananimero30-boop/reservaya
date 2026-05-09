@@ -52,10 +52,18 @@ export default function ReservationForm({ restaurant }) {
     if (!user) { toast.error('Inicia sesión para reservar'); navigate('/login'); return }
     if (!selectedTable) { toast.error('Selecciona una mesa'); return }
 
+    // Construyo la fecha con el offset local para que el backend reciba
+    // la hora correcta sin importar la zona horaria del servidor
+    const localDate = new Date(`${datetime.date}T${datetime.time}:00`)
+    const tzOffset = -localDate.getTimezoneOffset()
+    const sign = tzOffset >= 0 ? '+' : '-'
+    const pad = n => String(Math.floor(Math.abs(n))).padStart(2, '0')
+    const startTime = `${datetime.date}T${datetime.time}:00${sign}${pad(tzOffset / 60)}:${pad(tzOffset % 60)}`
+
     mutation.mutate({
       restaurant_id: restaurant.id,
       table_id: selectedTable,
-      start_time: `${datetime.date}T${datetime.time}:00`,
+      start_time: startTime,
       guests: datetime.guests,
       notes: data.notes,
     })

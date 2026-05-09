@@ -13,6 +13,7 @@ const MyReservations   = lazy(() => import('./pages/MyReservations'))
 const OwnerDashboard   = lazy(() => import('./pages/OwnerDashboard'))
 const AdminDashboard   = lazy(() => import('./pages/AdminDashboard'))
 const Profile          = lazy(() => import('./pages/Profile'))
+const GoogleCallback   = lazy(() => import('./pages/GoogleCallback'))
 
 export default function App() {
   const [dark, setDark] = useState(() => localStorage.getItem('theme') === 'dark')
@@ -38,6 +39,7 @@ export default function App() {
                 <Route path="/propietario"         element={<OwnerDashboard />} />
                 <Route path="/admin"               element={<AdminDashboard />} />
                 <Route path="/perfil"              element={<Profile />} />
+                <Route path="/auth/google/callback" element={<GoogleCallback />} />
               </Routes>
             </Suspense>
           </main>

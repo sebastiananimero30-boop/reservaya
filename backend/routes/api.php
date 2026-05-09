@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\GoogleAuthController;
 use App\Http\Controllers\Api\OwnerMenuController;
 use App\Http\Controllers\Api\ReservationController;
 use App\Http\Controllers\Api\RestaurantController;
@@ -12,6 +13,10 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
     Route::post('login',    [AuthController::class, 'login']);
+
+    // Google OAuth
+    Route::get('google',          [GoogleAuthController::class, 'redirect']);
+    Route::post('google/callback', [GoogleAuthController::class, 'callback']);
 
     // Estas sí requieren token porque necesito saber quién está cerrando sesión
     Route::middleware('auth:sanctum')->group(function () {

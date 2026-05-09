@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect, forwardRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Star, MapPin, Clock, Phone, ArrowLeft, ChefHat, X, ShoppingBag } from 'lucide-react'
+import { Star, MapPin, Clock, Phone, ArrowLeft, ChefHat, X, ChevronLeft, ChevronRight, Images } from 'lucide-react'
 import { useRestaurant } from '../hooks/useRestaurants'
 import ReservationForm from '../components/reservations/ReservationForm'
 import Spinner from '../components/common/Spinner'
@@ -28,6 +28,164 @@ const DEFAULT_PLACEHOLDER = 'https://images.unsplash.com/photo-1414235077428-338
 
 function getPlaceholder(categoria) {
   return PLACEHOLDER_BY_CAT[categoria] || DEFAULT_PLACEHOLDER
+}
+
+// ── Galería hero del restaurante ─────────────────────────────────────────────
+function RestaurantHero({ restaurant, emoji }) {
+  const fotos = restaurant.fotos?.filter(f => f.url) ?? []
+  const coverFirst = fotos.sort((a, b) => (b.is_cover ? 1 : 0) - (a.is_cover ? 1 : 0))
+  const images = coverFirst.length > 0
+    ? coverFirst.map(f => f.url)
+    : restaurant.imagen
+      ? [restaurant.imagen]
+      : []
+
+  const [current, setCurrent] = useState(0)
+  const [lightbox, setLightbox] = useState(false)
+
+  const prev = (e) => { e.stopPropagation(); setCurrent(i => (i - 1 + images.length) % images.length) }
+  const next = (e) => { e.stopPropagation(); setCurrent(i => (i + 1) % images.length) }
+
+  // Si no hay fotos, muestra el hero original con emoji
+  if (!images.length) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+        className="relative h-64 md:h-80 rounded-3xl overflow-hidden bg-gradient-to-br from-stone-700 to-stone-900"
+      >
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-[8rem] opacity-40">{emoji}</span>
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+        <HeroInfo restaurant={restaurant} emoji={emoji} />
+      </motion.div>
+    )
+  }
+
+  return (
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+        className="relative h-64 md:h-80 rounded-3xl overflow-hidden bg-stone-900 cursor-pointer group"
+        onClick={() => setLightbox(true)}
+      >
+        {/* Imagen activa */}
+        <AnimatePresence mode="wait">
+          <motion.img
+            key={current}
+            src={images[current]}
+            alt={`${restaurant.nombre} foto ${current + 1}`}
+            className="absolute inset-0 w-full h-full object-cover"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            onError={e => { e.target.style.display = 'none' }}
+          />
+        </AnimatePresence>
+
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+
+        {/* Flechas — solo si hay más de 1 foto */}
+        {images.length > 1 && (
+          <>
+            <button onClick={prev}
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/40 hover:bg-black/70 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <button onClick={next}
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-black/40 hover:bg-black/70 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity">
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </>
+        )}
+
+        {/* Puntos de navegación */}
+        {images.length > 1 && (
+          <div className="absolute bottom-14 left-1/2 -translate-x-1/2 flex gap-1.5">
+            {images.map((_, i) => (
+              <button key={i} onClick={e => { e.stopPropagation(); setCurrent(i) }}
+                className={clsx('w-1.5 h-1.5 rounded-full transition-all',
+                  i === current ? 'bg-white w-4' : 'bg-white/50'
+                )}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Badge contador de fotos */}
+        {images.length > 1 && (
+          <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-black/50 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-full">
+            <Images className="w-3 h-3" />
+            {current + 1} / {images.length}
+          </div>
+        )}
+
+        <HeroInfo restaurant={restaurant} emoji={emoji} />
+      </motion.div>
+
+      {/* Lightbox */}
+      <AnimatePresence>
+        {lightbox && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
+            onClick={() => setLightbox(false)}>
+            <button onClick={() => setLightbox(false)}
+              className="absolute top-4 right-4 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors">
+              <X className="w-5 h-5" />
+            </button>
+            {images.length > 1 && (
+              <>
+                <button onClick={prev}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors">
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+                <button onClick={next}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors">
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+              </>
+            )}
+            <motion.img
+              key={current}
+              src={images[current]}
+              alt={`${restaurant.nombre} foto ${current + 1}`}
+              className="max-h-[85vh] max-w-full rounded-2xl object-contain shadow-2xl"
+              initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+            />
+            {images.length > 1 && (
+              <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+                {images.map((_, i) => (
+                  <button key={i} onClick={e => { e.stopPropagation(); setCurrent(i) }}
+                    className={clsx('w-2 h-2 rounded-full transition-all',
+                      i === current ? 'bg-white w-5' : 'bg-white/40'
+                    )}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </AnimatePresence>
+    </>
+  )
+}
+
+function HeroInfo({ restaurant, emoji }) {
+  return (
+    <div className="absolute bottom-6 left-6 right-6">
+      <h1 className="font-display text-3xl font-bold text-white mb-2">{restaurant.nombre}</h1>
+      <div className="flex items-center gap-3 text-white/80 text-sm flex-wrap">
+        <span className="flex items-center gap-1">
+          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+          {Number(restaurant.calificacion).toFixed(1)} · {restaurant.total_resenas} reseñas
+        </span>
+        <span>·</span>
+        <span>{emoji} {restaurant.categoria}</span>
+        <span>·</span>
+        <span>{restaurant.precio}</span>
+      </div>
+    </div>
+  )
 }
 
 // ── Modal detalle de plato ────────────────────────────────────────────────────
@@ -85,11 +243,12 @@ function MenuItemModal({ item, onClose }) {
 }
 
 // ── Tarjeta de plato ──────────────────────────────────────────────────────────
-function MenuCard({ item, onClick }) {
+const MenuCard = forwardRef(function MenuCard({ item, onClick }, ref) {
   const imgSrc = item.imagen || getPlaceholder(item.categoria)
 
   return (
     <motion.div
+      ref={ref}
       initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -4 }}
       onClick={onClick}
@@ -129,7 +288,7 @@ function MenuCard({ item, onClick }) {
       </div>
     </motion.div>
   )
-}
+})
 
 // ── Galería del menú ──────────────────────────────────────────────────────────
 function MenuGallery({ items }) {
@@ -220,29 +379,8 @@ export default function RestaurantDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left — info */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Hero */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-            className="relative h-64 md:h-80 rounded-3xl overflow-hidden bg-gradient-to-br from-stone-700 to-stone-900"
-          >
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-[8rem] opacity-40">{emoji}</span>
-            </div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-            <div className="absolute bottom-6 left-6 right-6">
-              <h1 className="font-display text-3xl font-bold text-white mb-2">{restaurant.nombre}</h1>
-              <div className="flex items-center gap-3 text-white/80 text-sm flex-wrap">
-                <span className="flex items-center gap-1">
-                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                  {Number(restaurant.calificacion).toFixed(1)} · {restaurant.total_resenas} reseñas
-                </span>
-                <span>·</span>
-                <span>{emoji} {restaurant.categoria}</span>
-                <span>·</span>
-                <span>{restaurant.precio}</span>
-              </div>
-            </div>
-          </motion.div>
+          {/* Hero — galería de fotos */}
+          <RestaurantHero restaurant={restaurant} emoji={emoji} />
 
           {/* Info grid */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
