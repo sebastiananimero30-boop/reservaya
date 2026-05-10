@@ -12,6 +12,9 @@ export const getOwnerReservations = (restaurantId, status = '') =>
 export const updateReservationStatus = (reservationId, status) =>
   api.patch(`/owner/reservations/${reservationId}/status`, { status }).then(r => r.data)
 
+export const scanOwnerReservation = (restaurantId, code, complete = false) =>
+  api.post(`/owner/restaurants/${restaurantId}/reservations/scan`, { code, complete }).then(r => r.data)
+
 export const getOwnerStats = (restaurantId) =>
   api.get(`/owner/restaurants/${restaurantId}/stats`).then(r => r.data)
 

@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\GoogleAuthController;
 use App\Http\Controllers\Api\OwnerMenuController;
 use App\Http\Controllers\Api\ReservationController;
 use App\Http\Controllers\Api\RestaurantController;
+use App\Http\Controllers\Api\ReviewController;
 use Illuminate\Support\Facades\Route;
 
 // Rutas públicas de autenticación — no requieren token
@@ -15,7 +16,7 @@ Route::prefix('auth')->group(function () {
     Route::post('login',    [AuthController::class, 'login']);
 
     // Google OAuth
-    Route::get('google',          [GoogleAuthController::class, 'redirect']);
+    Route::get('google',           [GoogleAuthController::class, 'redirect']);
     Route::post('google/callback', [GoogleAuthController::class, 'callback']);
 
     // Estas sí requieren token porque necesito saber quién está cerrando sesión
@@ -29,6 +30,7 @@ Route::prefix('auth')->group(function () {
 Route::get('categories',                       [CategoryController::class,  'index']);
 Route::get('restaurants',                      [RestaurantController::class, 'index']);
 Route::get('restaurants/{restaurant}',         [RestaurantController::class, 'show']);
+Route::get('restaurants/{restaurant}/reviews', [ReviewController::class,    'index']);
 
 // El frontend llama a estos dos endpoints para consultar disponibilidad de mesas,
 // los dejé con dos nombres distintos porque el componente los usa de formas diferentes
@@ -44,6 +46,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('reservations/{reservation}/cancel', [ReservationController::class, 'cancel']);
     Route::get('my/reservations',                     [ReservationController::class, 'myReservations']);
 
+    // Reseñas — solo clientes autenticados
+    Route::post('restaurants/{restaurant}/reviews',   [ReviewController::class, 'store']);
+    Route::delete('restaurants/{restaurant}/reviews', [ReviewController::class, 'destroy']);
+
     // Panel del propietario — solo accesible para usuarios con rol owner
     Route::prefix('owner')->group(function () {
         Route::get('restaurants',                           [OwnerMenuController::class, 'restaurants']);
@@ -52,6 +58,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::patch('menu-items/{menuItem}',               [OwnerMenuController::class, 'update']);
         Route::delete('menu-items/{menuItem}',              [OwnerMenuController::class, 'destroy']);
         Route::get('restaurants/{restaurant}/reservations', [OwnerMenuController::class, 'reservations']);
+        Route::post('restaurants/{restaurant}/reservations/scan', [OwnerMenuController::class, 'scanReservation']);
         Route::patch('reservations/{reservation}/status',   [OwnerMenuController::class, 'updateReservationStatus']);
         Route::get('restaurants/{restaurant}/stats',        [OwnerMenuController::class, 'stats']);
     });
@@ -65,6 +72,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('restaurants',                      [AdminController::class, 'createRestaurant']);
         Route::patch('restaurants/{restaurant}/assign', [AdminController::class, 'assignOwner']);
         Route::patch('restaurants/{restaurant}/cover',  [AdminController::class, 'updateCover']);
+        Route::patch('restaurants/{restaurant}',        [AdminController::class, 'updateRestaurant']);
         Route::get('categories',                        [AdminController::class, 'categories']);
         Route::get('stats',                             [AdminController::class, 'stats']);
     });
@@ -76,4 +84,3 @@ Route::get('health', fn () => response()->json([
     'service' => 'ReservaYa API',
     'version' => '1.0.0',
 ]));
-

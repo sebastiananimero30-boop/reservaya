@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Models\MenuItem;
+use App\Models\Reservation;
 use App\Models\Restaurant;
+use App\Models\Table;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -138,5 +140,50 @@ class OwnerMenuTest extends TestCase
              ->getJson("/api/owner/restaurants/{$restaurant->id}/stats")
              ->assertStatus(200)
              ->assertJsonStructure(['summary', 'by_hour', 'by_day', 'menu_items']);
+    }
+
+    public function test_owner_can_scan_reservation_qr_payload(): void
+    {
+        $owner      = User::factory()->owner()->create();
+        $restaurant = Restaurant::factory()->create(['owner_id' => $owner->id]);
+        $table      = Table::factory()->create(['restaurant_id' => $restaurant->id]);
+        $reservation = Reservation::factory()->create([
+            'restaurant_id' => $restaurant->id,
+            'table_id'      => $table->id,
+            'qr_code'       => 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=reservaya-test-token',
+        ]);
+
+        $this->actingAs($owner)
+             ->postJson("/api/owner/restaurants/{$restaurant->id}/reservations/scan", [
+                 'code' => 'reservaya-test-token',
+             ])
+             ->assertStatus(200)
+             ->assertJsonPath('reservation.id', $reservation->id)
+             ->assertJsonPath('reservation.code', 'RYA-' . str_pad($reservation->id, 6, '0', STR_PAD_LEFT));
+    }
+
+    public function test_owner_can_scan_reservation_manual_code_and_complete_it(): void
+    {
+        $owner      = User::factory()->owner()->create();
+        $restaurant = Restaurant::factory()->create(['owner_id' => $owner->id]);
+        $table      = Table::factory()->create(['restaurant_id' => $restaurant->id]);
+        $reservation = Reservation::factory()->create([
+            'restaurant_id' => $restaurant->id,
+            'table_id'      => $table->id,
+            'status'        => 'confirmed',
+        ]);
+
+        $this->actingAs($owner)
+             ->postJson("/api/owner/restaurants/{$restaurant->id}/reservations/scan", [
+                 'code'     => 'RYA-' . str_pad($reservation->id, 6, '0', STR_PAD_LEFT),
+                 'complete' => true,
+             ])
+             ->assertStatus(200)
+             ->assertJsonPath('reservation.status', 'completed');
+
+        $this->assertDatabaseHas('reservations', [
+            'id'     => $reservation->id,
+            'status' => 'completed',
+        ]);
     }
 }

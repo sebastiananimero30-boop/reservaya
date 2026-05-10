@@ -1,1 +1,0 @@
-import{g as a}from"./index-DTW2vbEk.js";const r=()=>a.get("/owner/restaurants").then(e=>e.data),o=e=>a.get(`/owner/restaurants/${e}/menu`).then(t=>t.data),u=(e,t)=>a.post(`/owner/restaurants/${e}/menu`,t).then(n=>n.data),m=(e,t)=>a.patch(`/owner/menu-items/${e}`,t).then(n=>n.data),d=e=>a.delete(`/owner/menu-items/${e}`).then(t=>t.data);export{o as a,u as c,d,r as g,m as u};

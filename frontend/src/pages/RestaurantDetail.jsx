@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Star, MapPin, Clock, Phone, ArrowLeft, ChefHat, X, ChevronLeft, ChevronRight, Images } from 'lucide-react'
 import { useRestaurant } from '../hooks/useRestaurants'
 import ReservationForm from '../components/reservations/ReservationForm'
+import ReviewSection from '../components/restaurants/ReviewSection'
 import Spinner from '../components/common/Spinner'
 import clsx from 'clsx'
 
@@ -441,6 +442,9 @@ export default function RestaurantDetail() {
           {restaurant.menu?.length > 0 && (
             <MenuGallery items={restaurant.menu} />
           )}
+
+          {/* Reseñas */}
+          <ReviewSection restaurantId={restaurant.id} />
         </div>
 
         {/* Right — reservation form */}

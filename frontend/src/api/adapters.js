@@ -76,6 +76,8 @@ export function adaptReservation(r) {
 
   return {
     id:         r.id,
+    code:       r.code ?? `RYA-${String(r.id).padStart(6, '0')}`,
+    qr_code:    r.qr_code ?? null,
     restaurant,
     mesa,
     start_time: r.start_time,

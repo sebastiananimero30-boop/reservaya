@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Star, MapPin, Users, Clock, TrendingUp } from 'lucide-react'
+import { Star, MapPin, Clock } from 'lucide-react'
 import clsx from 'clsx'
 
 const CATEGORY_EMOJIS = {
@@ -43,10 +43,10 @@ export default function RestaurantCard({ restaurant, index = 0 }) {
                             px-2.5 py-1 rounded-lg text-xs font-bold shadow">
               <span className={PRICE_COLORS[restaurant.precio] || 'text-stone-600'}>{restaurant.precio}</span>
             </div>
-            {/* Badge destacado */}
+            {/* Badge destacado — solo si el restaurante lo tiene activo */}
             {restaurant.destacado && (
-              <div className="absolute top-3 left-3 bg-primary-500 text-white px-2.5 py-1 rounded-lg text-xs font-semibold flex items-center gap-1">
-                <TrendingUp className="w-3 h-3" /> Destacado
+              <div className="absolute top-3 left-3 bg-primary-500 text-white px-2.5 py-1 rounded-lg text-xs font-semibold">
+                Destacado
               </div>
             )}
             {/* Gradient overlay */}
@@ -94,8 +94,7 @@ export default function RestaurantCard({ restaurant, index = 0 }) {
 
             {/* Reservas hoy */}
             {restaurant.reservas_hoy > 0 && (
-              <p className="text-xs text-stone-500 dark:text-stone-400 mb-3 flex items-center gap-1">
-                <Users className="w-3 h-3 text-primary-400" />
+              <p className="text-xs text-stone-500 dark:text-stone-400 mb-3">
                 Reservado <strong className="text-stone-700 dark:text-stone-300">{restaurant.reservas_hoy} veces</strong> hoy
               </p>
             )}

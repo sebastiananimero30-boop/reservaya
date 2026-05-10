@@ -5,7 +5,6 @@ import { useAuth } from '../hooks/useAuth'
 import Spinner from '../components/common/Spinner'
 import { getMyReservations } from '../api/reservations'
 import { getOwnerRestaurants } from '../api/owner'
-import { getCategories, getRestaurants } from '../api/restaurants'
 import { adaptRestaurant } from '../api/adapters'
 
 const ROLE_LABELS = {
@@ -38,13 +37,13 @@ export default function Profile() {
 
   const adminRestaurantsQuery = useQuery({
     queryKey: ['profile-admin-restaurants'],
-    queryFn: () => getRestaurants({ per_page: 1 }),
+    queryFn: () => import('../api/restaurants').then(m => m.getRestaurants({ per_page: 1 })),
     enabled: !!user && role === 'admin',
   })
 
   const adminCategoriesQuery = useQuery({
     queryKey: ['profile-admin-categories'],
-    queryFn: () => getCategories(),
+    queryFn: () => import('../api/restaurants').then(m => m.getCategories()),
     enabled: !!user && role === 'admin',
   })
 

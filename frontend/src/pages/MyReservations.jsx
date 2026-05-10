@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
-import { Calendar, Clock, Users, X, CheckCircle, AlertCircle } from 'lucide-react'
+import { Calendar, Clock, QrCode, Users, X, CheckCircle } from 'lucide-react'
 import { getMyReservations, cancelReservation } from '../api/reservations'
 import { adaptReservation } from '../api/adapters'
 import { useAuth } from '../hooks/useAuth'
@@ -88,6 +88,22 @@ export default function MyReservations() {
                     </div>
                     {res.mesa && (
                       <p className="text-xs text-stone-400 mt-2">Mesa #{res.mesa.numero}</p>
+                    )}
+                    {res.qr_code && (
+                      <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                        <img
+                          src={res.qr_code}
+                          alt={`Codigo QR de la reserva ${res.code}`}
+                          className="w-28 h-28 rounded-lg border border-stone-200 bg-white p-2"
+                        />
+                        <div className="text-sm text-stone-500">
+                          <p className="flex items-center gap-1.5 font-medium text-stone-700 dark:text-stone-300">
+                            <QrCode className="w-4 h-4 text-primary-400" />
+                            {res.code}
+                          </p>
+                          <p className="text-xs mt-1">Presenta este QR o el codigo al llegar.</p>
+                        </div>
+                      </div>
                     )}
                   </div>
                   {res.estado === 'confirmada' && (

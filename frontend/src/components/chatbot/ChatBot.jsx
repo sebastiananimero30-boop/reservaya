@@ -75,7 +75,6 @@ async function askGroq(history, userMessage) {
 
   if (!res.ok) {
     const errBody = await res.json().catch(() => ({}))
-    console.error('Groq error:', errBody)
     throw new Error(`${res.status}: ${errBody?.error?.message || 'Error desconocido'}`)
   }
 
@@ -134,7 +133,6 @@ export default function ChatBot() {
       } else {
         addBotMessage(`😅 Error al conectarme: ${msg}`)
       }
-      console.error('Groq error:', err)
     }
   }
 

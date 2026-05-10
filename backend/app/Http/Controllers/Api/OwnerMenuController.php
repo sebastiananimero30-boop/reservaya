@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\MenuItemResource;
 use App\Http\Resources\RestaurantResource;
 use App\Models\MenuItem;
+use App\Models\Reservation;
 use App\Models\Restaurant;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -105,9 +106,44 @@ class OwnerMenuController extends Controller
         ]);
     }
 
+    // Valida el QR o el código manual RYA-000001 que recibe el cliente.
+    // Si complete=true, también marca la reserva como completada al llegar.
+    public function scanReservation(Request $request, Restaurant $restaurant): JsonResponse
+    {
+        $this->authorizeRestaurant($request, $restaurant);
+
+        $data = $request->validate([
+            'code'     => ['required', 'string', 'max:500'],
+            'complete' => ['sometimes', 'boolean'],
+        ]);
+
+        $reservation = $this->findReservationByCode($restaurant, trim($data['code']));
+
+        if (! $reservation) {
+            abort(404, 'No encontramos una reserva con ese código para este restaurante.');
+        }
+
+        if ($data['complete'] ?? false) {
+            if ($reservation->status === 'cancelled') {
+                abort(422, 'Esta reserva fue cancelada y no se puede completar.');
+            }
+
+            if ($reservation->status !== 'completed') {
+                $reservation->update(['status' => 'completed']);
+            }
+        }
+
+        $reservation->load(['user', 'table']);
+
+        return response()->json([
+            'message'     => 'Reserva validada correctamente.',
+            'reservation' => $this->reservationPayload($reservation),
+        ]);
+    }
+
     // Permite al propietario cambiar el estado de una reserva de su restaurante.
     // Puede confirmar, completar o cancelar
-    public function updateReservationStatus(Request $request, \App\Models\Reservation $reservation): JsonResponse
+    public function updateReservationStatus(Request $request, Reservation $reservation): JsonResponse
     {
         $this->ensureOwner($request);
 
@@ -217,6 +253,61 @@ class OwnerMenuController extends Controller
             'by_day'     => $byDayFormatted,
             'menu_items' => $topItems,
         ]);
+    }
+
+    private function findReservationByCode(Restaurant $restaurant, string $code): ?Reservation
+    {
+        $query = Reservation::where('restaurant_id', $restaurant->id);
+
+        if (preg_match('/^RYA-0*(\d+)$/i', $code, $matches)) {
+            return (clone $query)->whereKey((int) $matches[1])->first();
+        }
+
+        if (preg_match('/^\d+$/', $code)) {
+            return (clone $query)->whereKey((int) $code)->first();
+        }
+
+        $qrPayload = $this->extractQrPayload($code);
+
+        if (! str_starts_with($qrPayload, 'reservaya-')) {
+            return null;
+        }
+
+        return (clone $query)
+            ->where(function ($q) use ($qrPayload) {
+                $q->where('qr_code', 'like', '%' . $qrPayload . '%')
+                    ->orWhere('qr_code', 'like', '%' . rawurlencode($qrPayload) . '%');
+            })
+            ->first();
+    }
+
+    private function extractQrPayload(string $code): string
+    {
+        if (str_contains($code, 'data=')) {
+            $query = parse_url($code, PHP_URL_QUERY);
+            parse_str($query ?: '', $params);
+
+            if (! empty($params['data']) && is_string($params['data'])) {
+                return trim($params['data']);
+            }
+        }
+
+        return trim($code);
+    }
+
+    private function reservationPayload(Reservation $reservation): array
+    {
+        return [
+            'id'          => $reservation->id,
+            'code'        => 'RYA-' . str_pad($reservation->id, 6, '0', STR_PAD_LEFT),
+            'guest_name'  => $reservation->user->name ?? 'Cliente',
+            'guest_email' => $reservation->user->email ?? '',
+            'table'       => $reservation->table->name ?? "Mesa #{$reservation->table_id}",
+            'guests'      => $reservation->guests,
+            'start_time'  => $reservation->start_time?->toIso8601String(),
+            'status'      => $reservation->status,
+            'notes'       => $reservation->notes,
+        ];
     }
 
     // Verifico que el usuario sea propietario antes de cualquier operación

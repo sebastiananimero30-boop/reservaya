@@ -13,6 +13,7 @@ class ReservationResource extends JsonResource
     {
         return [
             'id'              => $this->id,
+            'code'            => 'RYA-' . str_pad($this->id, 6, '0', STR_PAD_LEFT),
             'restaurant_id'   => $this->restaurant_id,
             'restaurant_name' => $this->restaurant->name ?? null,
             'restaurant'      => $this->when(

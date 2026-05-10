@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Users, Store, Plus, Trash2, Copy, Check, Eye, EyeOff,
-  Loader2, ShieldCheck, X, ChevronDown, Building2, ImagePlus, BarChart2
+  Loader2, ShieldCheck, X, ChevronDown, Building2, ImagePlus, BarChart2, Pencil
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Link } from 'react-router-dom'
@@ -13,7 +13,7 @@ import ImageUploader from '../components/common/ImageUploader'
 import {
   getOwners, createOwner, deleteOwner,
   getAdminRestaurants, createRestaurant, assignOwnerToRestaurant,
-  getAdminCategories, updateRestaurantCover,
+  getAdminCategories, updateRestaurantCover, updateRestaurant,
 } from '../api/admin'
 import { adaptRestaurant } from '../api/adapters'
 import AdminStats from '../components/admin/AdminStats'
@@ -224,7 +224,9 @@ function RestaurantsTab() {
   const qc = useQueryClient()
   const [showModal, setShowModal] = useState(false)
   const [coverModal, setCoverModal] = useState(null)
+  const [editModal, setEditModal] = useState(null)
   const [coverUrl, setCoverUrl] = useState('')
+  const [editForm, setEditForm] = useState({})
   const [form, setForm] = useState({ name: '', description: '', address: '', zone: '', phone: '', category_id: '', owner_id: '', latitude: '', longitude: '', capacity: '40' })
 
   const { data: restData, isLoading: restLoading } = useQuery({
@@ -268,6 +270,26 @@ function RestaurantsTab() {
     onError: (err) => toast.error(err.response?.data?.message || 'URL inválida'),
   })
 
+  const editMutation = useMutation({
+    mutationFn: () => updateRestaurant(editModal.id, {
+      ...editForm,
+      category_id: editForm.category_id ? Number(editForm.category_id) : undefined,
+      latitude: editForm.latitude ? Number(editForm.latitude) : undefined,
+      longitude: editForm.longitude ? Number(editForm.longitude) : undefined,
+      capacity: editForm.capacity ? Number(editForm.capacity) : undefined,
+    }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-restaurants'] })
+      toast.success('Restaurante actualizado')
+      setEditModal(null)
+      setEditForm({})
+    },
+    onError: (err) => {
+      const errors = err.response?.data?.errors
+      toast.error(errors ? Object.values(errors).flat()[0] : (err.response?.data?.message || 'Error al actualizar'))
+    },
+  })
+
   if (restLoading) return <div className="flex justify-center py-16"><Spinner /></div>
 
   return (
@@ -305,6 +327,16 @@ function RestaurantsTab() {
                 <button onClick={() => { setCoverModal({ id: r.id, nombre: r.nombre }); setCoverUrl(r.foto_portada || '') }}
                   className="p-2 rounded-lg text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-700 hover:text-primary-500 transition-colors" title="Cambiar foto">
                   <ImagePlus className="w-4 h-4" />
+                </button>
+                <button onClick={() => {
+                  setEditModal({ id: r.id, nombre: r.nombre })
+                  setEditForm({
+                    name: r.nombre, description: r.descripcion, address: r.direccion,
+                    zone: r.zona, phone: r.telefono, latitude: r.latitud, longitude: r.longitud,
+                  })
+                }}
+                  className="p-2 rounded-lg text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-700 hover:text-primary-500 transition-colors" title="Editar">
+                  <Pencil className="w-4 h-4" />
                 </button>
                 <div className="relative">
                   <select defaultValue={r.owner_id ?? ''} onChange={e => assignMutation.mutate({ restaurantId: r.id, ownerId: e.target.value })}
@@ -355,6 +387,55 @@ function RestaurantsTab() {
                 </button>
               </div>
             </div>
+          </Modal>
+        )}
+      </AnimatePresence>
+
+      {/* Modal editar restaurante */}
+      <AnimatePresence>
+        {editModal && (
+          <Modal open={!!editModal} onClose={() => { setEditModal(null); setEditForm({}) }} title={`Editar: ${editModal.nombre}`}>
+            <form onSubmit={e => { e.preventDefault(); editMutation.mutate() }}
+              className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
+              <label className="block">
+                <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Nombre</span>
+                <input className="input-base mt-1" value={editForm.name || ''} onChange={e => setEditForm({ ...editForm, name: e.target.value })} />
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="block">
+                  <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Zona</span>
+                  <input className="input-base mt-1" value={editForm.zone || ''} onChange={e => setEditForm({ ...editForm, zone: e.target.value })} />
+                </label>
+                <label className="block">
+                  <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Teléfono</span>
+                  <input className="input-base mt-1" value={editForm.phone || ''} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} />
+                </label>
+              </div>
+              <label className="block">
+                <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Dirección</span>
+                <input className="input-base mt-1" value={editForm.address || ''} onChange={e => setEditForm({ ...editForm, address: e.target.value })} />
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="block">
+                  <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Latitud</span>
+                  <input type="number" step="any" className="input-base mt-1" value={editForm.latitude || ''} onChange={e => setEditForm({ ...editForm, latitude: e.target.value })} />
+                </label>
+                <label className="block">
+                  <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Longitud</span>
+                  <input type="number" step="any" className="input-base mt-1" value={editForm.longitude || ''} onChange={e => setEditForm({ ...editForm, longitude: e.target.value })} />
+                </label>
+              </div>
+              <label className="block">
+                <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Descripción</span>
+                <textarea rows={3} className="input-base resize-none mt-1" value={editForm.description || ''} onChange={e => setEditForm({ ...editForm, description: e.target.value })} />
+              </label>
+              <div className="flex gap-2 pt-1">
+                <button type="button" onClick={() => { setEditModal(null); setEditForm({}) }} className="btn-outline flex-1">Cancelar</button>
+                <button type="submit" disabled={editMutation.isPending} className="btn-primary flex-1 flex items-center justify-center gap-2">
+                  {editMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Pencil className="w-4 h-4" />} Guardar cambios
+                </button>
+              </div>
+            </form>
           </Modal>
         )}
       </AnimatePresence>

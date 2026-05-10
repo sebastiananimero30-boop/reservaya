@@ -23,6 +23,9 @@ export const assignOwnerToRestaurant = (restaurantId, ownerId) =>
 export const updateRestaurantCover = (restaurantId, url) =>
   api.patch(`/admin/restaurants/${restaurantId}/cover`, { url }).then(r => r.data)
 
+export const updateRestaurant = (restaurantId, data) =>
+  api.patch(`/admin/restaurants/${restaurantId}`, data).then(r => r.data)
+
 // ── Categorías ────────────────────────────────────────────────────────────────
 export const getAdminCategories = () =>
   api.get('/admin/categories').then(r => r.data)

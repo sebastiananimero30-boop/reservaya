@@ -280,4 +280,31 @@ class AdminController extends Controller
             'data' => Category::orderBy('name')->get(),
         ]);
     }
+
+    // Edita los datos de un restaurante existente
+    public function updateRestaurant(Request $request, Restaurant $restaurant): JsonResponse
+    {
+        $this->ensureAdmin($request);
+
+        $data = $request->validate([
+            'name'        => 'sometimes|string|max:255',
+            'description' => 'nullable|string|max:2000',
+            'address'     => 'sometimes|string|max:500',
+            'zone'        => 'sometimes|string|max:100',
+            'phone'       => 'nullable|string|max:20',
+            'category_id' => 'sometimes|exists:categories,id',
+            'latitude'    => 'nullable|numeric|between:-90,90',
+            'longitude'   => 'nullable|numeric|between:-180,180',
+            'capacity'    => 'nullable|integer|min:1|max:1000',
+            'is_active'   => 'sometimes|boolean',
+        ]);
+
+        $restaurant->update($data);
+        $restaurant->load(['category', 'photos']);
+
+        return response()->json([
+            'message'    => 'Restaurante actualizado correctamente.',
+            'restaurant' => new RestaurantResource($restaurant),
+        ]);
+    }
 }

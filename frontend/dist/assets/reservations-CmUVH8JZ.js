@@ -1,1 +1,0 @@
-import{g as t}from"./index-DTW2vbEk.js";const n=a=>t.post("/reservations",a).then(e=>e.data),o=()=>t.get("/my/reservations").then(a=>a.data),r=a=>t.patch(`/reservations/${a}/cancel`).then(e=>e.data);export{r as a,n as c,o as g};

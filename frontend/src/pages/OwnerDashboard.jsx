@@ -11,9 +11,10 @@ import { adaptMenuItem, adaptRestaurant } from '../api/adapters'
 import {
   createMenuItem, deleteMenuItem, getOwnerMenu,
   getOwnerRestaurants, updateMenuItem,
-  getOwnerReservations, updateReservationStatus,
+  getOwnerReservations, scanOwnerReservation, updateReservationStatus,
 } from '../api/owner'
 import OwnerStats from '../components/owner/OwnerStats'
+import ReservationScanner from '../components/owner/ReservationScanner'
 
 const EMPTY_FORM = { name: '', category: 'Principal', price: '', description: '', image_url: '', is_available: true }
 
@@ -33,6 +34,7 @@ export default function OwnerDashboard() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [activeTab, setActiveTab] = useState('menu')
   const [resFilter, setResFilter] = useState('')
+  const [scanResult, setScanResult] = useState(null)
 
   const isOwner = user?.role === 'owner'
 
@@ -46,6 +48,10 @@ export default function OwnerDashboard() {
   useEffect(() => {
     if (!selectedRestaurantId && restaurants.length) setSelectedRestaurantId(restaurants[0].id)
   }, [restaurants, selectedRestaurantId])
+
+  useEffect(() => {
+    setScanResult(null)
+  }, [selectedRestaurantId])
 
   const selectedRestaurant = useMemo(
     () => restaurants.find(r => r.id === Number(selectedRestaurantId)),
@@ -73,6 +79,20 @@ export default function OwnerDashboard() {
       queryClient.invalidateQueries({ queryKey: ['owner-reservations', selectedRestaurantId] })
     },
     onError: () => toast.error('No se pudo actualizar'),
+  })
+
+  const scanMutation = useMutation({
+    mutationFn: ({ code, complete = false }) => scanOwnerReservation(selectedRestaurantId, code, complete),
+    onSuccess: (data, variables) => {
+      setScanResult(data)
+      toast.success(variables.complete ? 'Llegada validada' : 'Reserva encontrada')
+      queryClient.invalidateQueries({ queryKey: ['owner-reservations', selectedRestaurantId] })
+      queryClient.invalidateQueries({ queryKey: ['owner-restaurants'] })
+    },
+    onError: (err) => {
+      setScanResult(null)
+      toast.error(err.response?.data?.message || 'No se pudo validar el codigo')
+    },
   })
 
   const resetForm = () => { setEditingId(null); setForm(EMPTY_FORM) }
@@ -310,6 +330,14 @@ export default function OwnerDashboard() {
                   </button>
                 </div>
               </div>
+
+              <ReservationScanner
+                restaurantName={selectedRestaurant?.nombre}
+                loading={scanMutation.isPending}
+                result={scanResult}
+                onScan={(code) => scanMutation.mutate({ code })}
+                onComplete={(reservation) => scanMutation.mutate({ code: reservation.code, complete: true })}
+              />
 
               {reservationsQuery.isLoading ? (
                 <div className="flex justify-center py-12"><Spinner size="lg" /></div>
