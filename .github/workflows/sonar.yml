@@ -4,10 +4,12 @@ on:
   push:
     branches:
       - main
+      - master
       - principal
   pull_request:
     branches:
       - main
+      - master
       - principal
 
 jobs:
