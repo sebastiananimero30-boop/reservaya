@@ -1,6 +1,20 @@
 import { useQuery } from '@tanstack/react-query'
+import { useState, useEffect } from 'react'
 import { getRestaurants, getRestaurant, getAvailability, getCategories } from '../api/restaurants'
 import { adaptRestaurant, adaptTable } from '../api/adapters'
+
+/**
+ * Hook de debounce — retrasa la actualización de un valor para evitar
+ * llamadas excesivas a la API mientras el usuario escribe o cambia filtros.
+ */
+function useDebounce(value, delay = 500) {
+  const [debounced, setDebounced] = useState(value)
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay)
+    return () => clearTimeout(timer)
+  }, [value, delay])
+  return debounced
+}
 
 // Datos mock para desarrollo (cuando no hay backend)
 const MOCK_RESTAURANTS = [
@@ -113,29 +127,34 @@ export function useRestaurant(id) {
 }
 
 export function useAvailability(restaurantId, date, time, guests) {
+  // Debounce de 400ms para evitar llamadas excesivas al cambiar fecha/hora/personas
+  const debouncedDate   = useDebounce(date, 400)
+  const debouncedTime   = useDebounce(time, 400)
+  const debouncedGuests = useDebounce(guests, 400)
+
   return useQuery({
-    queryKey: ['availability', restaurantId, date, time, guests],
+    queryKey: ['availability', restaurantId, debouncedDate, debouncedTime, debouncedGuests],
     queryFn: async () => {
       if (USE_MOCK) {
         await new Promise(r => setTimeout(r, 500))
         const slots = ['12:00','12:30','13:00','13:30','18:00','18:30',
                        '19:00','19:30','20:00','20:30','21:00']
         return {
-          time,
+          time: debouncedTime,
           tables: slots.map((t, i) => ({
             id: i + 1,
             numero: i + 1,
-            capacidad: guests,
+            capacidad: debouncedGuests,
             disponible: Math.random() > 0.3,
           })),
         }
       }
-      return getAvailability(restaurantId, date, time, guests).then(res => {
+      return getAvailability(restaurantId, debouncedDate, debouncedTime, debouncedGuests).then(res => {
         const tables = res.tables ?? res
-        return { time, tables: tables.map(adaptTable) }
+        return { time: debouncedTime, tables: tables.map(adaptTable) }
       })
     },
-    enabled: !!(restaurantId && date),
+    enabled: !!(restaurantId && debouncedDate),
   })
 }
 

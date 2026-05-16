@@ -21,6 +21,16 @@ class Reservation extends Model
         'status',
         'notes',
         'qr_code',
+        'payment_provider',
+        'payment_status',
+        'payment_amount',
+        'payment_currency',
+        'stripe_checkout_session_id',
+        'stripe_payment_intent_id',
+        'payment_paid_at',
+        'payment_intent_id',
+        'deposit_amount',
+        'deposit_refunded',
     ];
 
     protected function casts(): array
@@ -29,6 +39,8 @@ class Reservation extends Model
             'start_time'       => 'datetime',
             'duration_minutes' => 'integer',
             'guests'           => 'integer',
+            'payment_amount'    => 'integer',
+            'payment_paid_at'   => 'datetime',
         ];
     }
 

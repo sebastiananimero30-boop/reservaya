@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- Fondo blanco -->
+  <rect width="512" height="512" fill="#FFFFFF" rx="80"/>
+
+  <!-- Calendario (fondo naranja) -->
+  <rect x="96" y="50" width="320" height="270" rx="28" fill="#C17A3A"/>
+  <rect x="96" y="100" width="320" height="220" rx="0" fill="#FFF8F2"/>
+  <rect x="96" y="100" width="320" height="55" fill="#C17A3A"/>
+
+  <!-- Argollas del calendario -->
+  <rect x="170" y="30" width="32" height="52" rx="16" fill="#A0622A"/>
+  <rect x="310" y="30" width="32" height="52" rx="16" fill="#A0622A"/>
+
+  <!-- Cuadrícula del calendario -->
+  <rect x="130" y="178" width="38" height="38" rx="8" fill="#E8C9A0"/>
+  <rect x="188" y="178" width="38" height="38" rx="8" fill="#E8C9A0"/>
+  <rect x="246" y="178" width="38" height="38" rx="8" fill="#E8C9A0"/>
+  <rect x="304" y="178" width="38" height="38" rx="8" fill="#C17A3A"/>
+  <!-- Checkmark -->
+  <polyline points="312,197 322,210 342,185" stroke="#FFFFFF" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <rect x="130" y="232" width="38" height="38" rx="8" fill="#E8C9A0"/>
+  <rect x="188" y="232" width="38" height="38" rx="8" fill="#E8C9A0"/>
+  <rect x="246" y="232" width="38" height="38" rx="8" fill="#E8C9A0"/>
+  <rect x="304" y="232" width="38" height="38" rx="8" fill="#E8C9A0"/>
+
+  <!-- Sombra mesa -->
+  <ellipse cx="256" cy="410" rx="100" ry="26" fill="#D4A96A" opacity="0.35"/>
+
+  <!-- Mesa redonda -->
+  <ellipse cx="256" cy="378" rx="90" ry="74" fill="#F5E6D0" stroke="#C17A3A" stroke-width="7"/>
+  <!-- Mantel -->
+  <ellipse cx="256" cy="378" rx="70" ry="55" fill="#FFFFFF" opacity="0.85"/>
+
+  <!-- Letrero RESERVADO -->
+  <rect x="196" y="366" width="120" height="28" rx="7" fill="#C17A3A"/>
+  <text x="256" y="385" text-anchor="middle" font-family="Arial" font-size="16" fill="#FFFFFF" font-weight="bold">RESERVADO</text>
+
+  <!-- Sillas -->
+  <rect x="144" y="352" width="26" height="48" rx="10" fill="#A0622A"/>
+  <rect x="342" y="352" width="26" height="48" rx="10" fill="#A0622A"/>
+
+  <!-- Texto ReservaYa -->
+  <text x="256" y="490" text-anchor="middle" font-family="Arial" font-size="38" fill="#3D3D3D" font-weight="bold">Reserva<tspan fill="#C17A3A">Ya</tspan></text>
+</svg>

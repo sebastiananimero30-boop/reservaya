@@ -1,10 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Calendar, Clock, QrCode, Users, X, CheckCircle } from 'lucide-react'
-import { getMyReservations, cancelReservation } from '../api/reservations'
+import { Calendar, Clock, QrCode, Users, X, CheckCircle, CreditCard } from 'lucide-react'
+import { getMyReservations, cancelReservation, getStripeCheckoutSession } from '../api/reservations'
 import { adaptReservation } from '../api/adapters'
 import { useAuth } from '../hooks/useAuth'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import Spinner from '../components/common/Spinner'
 import toast from 'react-hot-toast'
 import clsx from 'clsx'
@@ -19,6 +20,7 @@ const STATUS_CONFIG = {
 export default function MyReservations() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const { data: reservations = [], isLoading } = useQuery({
     queryKey: ['my-reservations'],
@@ -34,6 +36,26 @@ export default function MyReservations() {
     },
     onError: () => toast.error('No se pudo cancelar'),
   })
+
+  useEffect(() => {
+    const stripeStatus = searchParams.get('stripe')
+    const sessionId = searchParams.get('session_id')
+
+    if (stripeStatus === 'success' && sessionId) {
+      getStripeCheckoutSession(sessionId)
+        .then(() => {
+          toast.success('Pago confirmado')
+          queryClient.invalidateQueries(['my-reservations'])
+        })
+        .catch(() => toast.error('No se pudo confirmar el pago'))
+        .finally(() => setSearchParams({}))
+    }
+
+    if (stripeStatus === 'cancelled') {
+      toast.error('Pago cancelado')
+      setSearchParams({})
+    }
+  }, [queryClient, searchParams, setSearchParams])
 
   if (!user) return (
     <div className="text-center py-24">
@@ -88,6 +110,12 @@ export default function MyReservations() {
                     </div>
                     {res.mesa && (
                       <p className="text-xs text-stone-400 mt-2">Mesa #{res.mesa.numero}</p>
+                    )}
+                    {res.payment_provider === 'stripe' && (
+                      <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-stone-500 dark:text-stone-400">
+                        <CreditCard className="w-3.5 h-3.5 text-primary-400" />
+                        Stripe: {res.payment_status === 'pagado' ? 'pagado' : 'pendiente'}
+                      </p>
                     )}
                     {res.qr_code && (
                       <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">

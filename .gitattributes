@@ -1,0 +1,25 @@
+# Normalizar saltos de línea automáticamente
+* text=auto
+
+# Forzar LF en archivos de código
+*.php text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.json text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.md text eol=lf
+*.env text eol=lf
+*.sh text eol=lf
+
+# Archivos binarios — no tocar
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg binary
+*.woff binary
+*.woff2 binary

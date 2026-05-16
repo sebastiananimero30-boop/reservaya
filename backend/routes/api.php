@@ -5,15 +5,17 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\GoogleAuthController;
 use App\Http\Controllers\Api\OwnerMenuController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ReservationController;
 use App\Http\Controllers\Api\RestaurantController;
 use App\Http\Controllers\Api\ReviewController;
+use App\Http\Controllers\Api\StripePaymentController;
 use Illuminate\Support\Facades\Route;
 
 // Rutas públicas de autenticación — no requieren token
 Route::prefix('auth')->group(function () {
-    Route::post('register', [AuthController::class, 'register']);
-    Route::post('login',    [AuthController::class, 'login']);
+    Route::post('register', [AuthController::class, 'register'])->middleware('throttle:10,1');
+    Route::post('login',    [AuthController::class, 'login'])->middleware('throttle:10,1');
 
     // Google OAuth
     Route::get('google',           [GoogleAuthController::class, 'redirect']);
@@ -36,6 +38,7 @@ Route::get('restaurants/{restaurant}/reviews', [ReviewController::class,    'ind
 // los dejé con dos nombres distintos porque el componente los usa de formas diferentes
 Route::get('restaurants/{restaurant}/tables',       [RestaurantController::class, 'availableTables']);
 Route::get('restaurants/{restaurant}/availability', [RestaurantController::class, 'availableTables']);
+Route::post('payments/stripe/webhook',              [StripePaymentController::class, 'webhook']);
 
 // Todo lo que sigue requiere que el usuario esté autenticado con un token válido
 Route::middleware('auth:sanctum')->group(function () {
@@ -45,10 +48,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('reservations/{reservation}',          [ReservationController::class, 'show']);
     Route::patch('reservations/{reservation}/cancel', [ReservationController::class, 'cancel']);
     Route::get('my/reservations',                     [ReservationController::class, 'myReservations']);
+    Route::post('reservations/{reservation}/checkout-session', [StripePaymentController::class, 'createCheckoutSession']);
+    Route::get('payments/stripe/sessions/{sessionId}',         [StripePaymentController::class, 'showSession']);
 
     // Reseñas — solo clientes autenticados
     Route::post('restaurants/{restaurant}/reviews',   [ReviewController::class, 'store']);
     Route::delete('restaurants/{restaurant}/reviews', [ReviewController::class, 'destroy']);
+
+    // Pagos con Stripe (Payment Intents)
+    Route::post('payments/create-intent',        [PaymentController::class, 'createIntent']);
+    Route::post('payments/confirm-reservation',  [PaymentController::class, 'confirmReservation']);
+    Route::post('payments/refund/{reservation}', [PaymentController::class, 'refund']);
 
     // Panel del propietario — solo accesible para usuarios con rol owner
     Route::prefix('owner')->group(function () {

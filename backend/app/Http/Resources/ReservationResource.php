@@ -32,6 +32,11 @@ class ReservationResource extends JsonResource
             'status'          => $this->status,
             'notes'           => $this->notes,
             'qr_code'         => $this->qr_code,
+            'payment_provider'=> $this->payment_provider,
+            'payment_status'  => $this->payment_status,
+            'payment_amount'  => $this->payment_amount,
+            'payment_currency'=> $this->payment_currency,
+            'payment_paid_at' => $this->payment_paid_at?->toIso8601String(),
             'created_at'      => $this->created_at?->toIso8601String(),
         ];
     }

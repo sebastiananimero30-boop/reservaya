@@ -3,6 +3,7 @@ import { Suspense, lazy, useState, useEffect } from 'react'
 import Navbar from './components/common/Navbar'
 import ChatBot from './components/chatbot/ChatBot'
 import Spinner from './components/common/Spinner'
+import ErrorBoundary from './components/common/ErrorBoundary'
 import { AuthProvider } from './context/AuthContext'
 
 const Home             = lazy(() => import('./pages/Home'))
@@ -29,19 +30,21 @@ export default function App() {
         <div className="min-h-screen flex flex-col">
           <Navbar dark={dark} setDark={setDark} />
           <main className="flex-1">
-            <Suspense fallback={<div className="flex items-center justify-center h-96"><Spinner size="lg" /></div>}>
-              <Routes>
-                <Route path="/"                    element={<Home />} />
-                <Route path="/restaurantes/:id"    element={<RestaurantDetail />} />
-                <Route path="/login"               element={<Login />} />
-                <Route path="/registro"            element={<Register />} />
-                <Route path="/mis-reservas"        element={<MyReservations />} />
-                <Route path="/propietario"         element={<OwnerDashboard />} />
-                <Route path="/admin"               element={<AdminDashboard />} />
-                <Route path="/perfil"              element={<Profile />} />
-                <Route path="/auth/google/callback" element={<GoogleCallback />} />
-              </Routes>
-            </Suspense>
+            <ErrorBoundary>
+              <Suspense fallback={<div className="flex items-center justify-center h-96"><Spinner size="lg" /></div>}>
+                <Routes>
+                  <Route path="/"                    element={<Home />} />
+                  <Route path="/restaurantes/:id"    element={<RestaurantDetail />} />
+                  <Route path="/login"               element={<Login />} />
+                  <Route path="/registro"            element={<Register />} />
+                  <Route path="/mis-reservas"        element={<MyReservations />} />
+                  <Route path="/propietario"         element={<OwnerDashboard />} />
+                  <Route path="/admin"               element={<AdminDashboard />} />
+                  <Route path="/perfil"              element={<Profile />} />
+                  <Route path="/auth/google/callback" element={<GoogleCallback />} />
+                </Routes>
+              </Suspense>
+            </ErrorBoundary>
           </main>
           <ChatBot />
         </div>

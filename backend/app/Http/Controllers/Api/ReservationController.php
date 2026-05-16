@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Helpers\ReservationHelper;
 use App\Mail\ReservationConfirmed;
 use App\Mail\OwnerNewReservation;
 use App\Http\Controllers\Controller;
@@ -15,7 +16,6 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 
 class ReservationController extends Controller
 {
@@ -38,12 +38,15 @@ class ReservationController extends Controller
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'restaurant_id' => 'required|exists:restaurants,id',
-            'table_id'      => 'required|exists:tables,id',
-            'start_time'    => 'required|date|after:' . now()->subMinutes(10)->toDateTimeString(),
-            'guests'        => 'required|integer|min:1|max:20',
-            'notes'         => 'nullable|string|max:500',
+            'restaurant_id'  => 'required|exists:restaurants,id',
+            'table_id'       => 'required|exists:tables,id',
+            'start_time'     => 'required|date|after:' . now()->subMinutes(10)->toDateTimeString(),
+            'guests'         => 'required|integer|min:1|max:20',
+            'notes'          => 'nullable|string|max:500',
+            'pay_with_stripe'=> 'sometimes|boolean',
         ]);
+
+        $payWithStripe = ($data['pay_with_stripe'] ?? false) && config('services.stripe.secret');
 
         // Verifico que la mesa exista y esté activa en ese restaurante
         $table = Table::where('id', $data['table_id'])
@@ -58,23 +61,9 @@ class ReservationController extends Controller
             ], 422);
         }
 
-        // Calculo el rango de tiempo de la reserva (90 minutos por defecto)
-        // y busco si hay algún conflicto con reservas existentes
         $start = Carbon::parse($data['start_time']);
-        $end   = $start->copy()->addMinutes(90);
-        $overlapEndExpr = DB::connection()->getDriverName() === 'pgsql'
-            ? "start_time + (duration_minutes * interval '1 minute') > ?"
-            : "datetime(start_time, '+' || duration_minutes || ' minutes') > ?";
 
-        $conflict = Reservation::where('table_id', $data['table_id'])
-            ->whereNotIn('status', ['cancelled'])
-            ->where(function ($q) use ($start, $end, $overlapEndExpr) {
-                $q->where('start_time', '<', $end)
-                  ->whereRaw($overlapEndExpr, [$start]);
-            })
-            ->exists();
-
-        if ($conflict) {
+        if (ReservationHelper::hasConflict($data['table_id'], $start)) {
             return response()->json([
                 'message' => 'La mesa no está disponible para el horario seleccionado.',
             ], 409);
@@ -84,12 +73,32 @@ class ReservationController extends Controller
             ...$data,
             'user_id'          => $request->user()->id,
             'duration_minutes' => 90,
-            'status'           => 'confirmed',
+            'status'           => $payWithStripe ? 'pending' : 'confirmed',
+            'payment_provider' => $payWithStripe ? 'stripe' : null,
+            'payment_status'   => 'unpaid',
         ]);
 
         $reservation->load(['restaurant', 'table']);
 
-        // Envío email al cliente con los detalles y el QR
+        // Si el usuario quiere pagar con Stripe y está configurado
+        if ($payWithStripe) {
+            try {
+                $checkout = app(\App\Services\StripeCheckoutService::class);
+                $session  = $checkout->createReservationSession($reservation);
+
+                return response()->json([
+                    'data'         => new ReservationResource($reservation->fresh(['restaurant', 'table'])),
+                    'checkout_url' => $session->url,
+                    'session_id'   => $session->id,
+                ], 201);
+            } catch (\Exception $e) {
+                // Si Stripe falla, confirmo la reserva sin pago
+                $reservation->update(['status' => 'confirmed', 'payment_provider' => null]);
+                \Log::warning('Stripe checkout falló: ' . $e->getMessage());
+            }
+        }
+
+        // Envío email al cliente
         try {
             Mail::to($request->user()->email)
                 ->send(new ReservationConfirmed($reservation->load(['restaurant', 'table', 'user'])));
@@ -97,7 +106,7 @@ class ReservationController extends Controller
             \Log::warning('Email cliente no enviado: ' . $e->getMessage());
         }
 
-        // Envío email al propietario notificándole la nueva reserva
+        // Envío email al propietario
         try {
             $owner = $reservation->restaurant->owner;
             if ($owner && $owner->email) {

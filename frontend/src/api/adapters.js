@@ -85,12 +85,22 @@ export function adaptReservation(r) {
     notes:      r.notes ?? r.notas ?? '',
     estado:     normalizeStatus(r.status ?? r.estado),
     duration:   r.duration_minutes ?? 90,
+    payment_provider: r.payment_provider ?? null,
+    payment_status:   normalizePaymentStatus(r.payment_status),
+    payment_amount:   r.payment_amount ?? null,
+    payment_currency: r.payment_currency ?? 'usd',
+    payment_paid_at:  r.payment_paid_at ?? null,
   }
 }
 
 function normalizeStatus(s) {
   const map = { confirmed: 'confirmada', pending: 'pendiente', cancelled: 'cancelada', completed: 'completada' }
   return map[s] ?? s ?? 'pendiente'
+}
+
+function normalizePaymentStatus(s) {
+  const map = { paid: 'pagado', unpaid: 'sin_pagar', no_payment_required: 'sin_pago_requerido' }
+  return map[s] ?? s ?? 'sin_pagar'
 }
 
 function buildScheduleString(schedules) {

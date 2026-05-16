@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Helpers\ReservationHelper;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class Restaurant extends Model
@@ -145,23 +147,12 @@ class Restaurant extends Model
     // La expresión SQL para calcular el fin de la reserva cambia según la base de datos
     public function availableTables(string $startTime, int $guests = 1)
     {
-        $start = \Carbon\Carbon::parse($startTime);
-        $end   = $start->copy()->addMinutes(90);
-        $overlapEndExpr = DB::connection()->getDriverName() === 'pgsql'
-            ? "start_time + (duration_minutes * interval '1 minute') > ?"
-            : "datetime(start_time, '+' || duration_minutes || ' minutes') > ?";
+        $start = Carbon::parse($startTime);
 
-        return $this->tables()
+        $query = $this->tables()
             ->where('is_active', true)
-            ->where('seats', '>=', $guests)
-            ->whereDoesntHave('reservations', function ($q) use ($start, $end, $overlapEndExpr) {
-                $q->whereNotIn('status', ['cancelled'])
-                  ->where(function ($inner) use ($start, $end, $overlapEndExpr) {
-                      // Hay solapamiento si: inicio_existente < fin_nueva AND fin_existente > inicio_nueva
-                      $inner->where('start_time', '<', $end)
-                            ->whereRaw($overlapEndExpr, [$start]);
-                  });
-            })
-            ->get();
+            ->where('seats', '>=', $guests);
+
+        return ReservationHelper::applyAvailabilityFilter($query, $start)->get();
     }
 }

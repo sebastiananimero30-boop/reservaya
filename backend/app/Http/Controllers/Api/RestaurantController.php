@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Helpers\ReservationHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\RestaurantResource;
 use App\Http\Resources\TableResource;
 use App\Models\Restaurant;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Facades\DB;
 
 class RestaurantController extends Controller
 {
@@ -41,19 +42,12 @@ class RestaurantController extends Controller
         if ($request->filled('date') && $request->filled('time')) {
             $startTime = $request->date . ' ' . $request->time;
             $guests    = (int) $request->get('guests', 1);
-            $overlapEndExpr = DB::connection()->getDriverName() === 'pgsql'
-                ? "start_time + (duration_minutes * interval '1 minute') > ?"
-                : "datetime(start_time, '+' || duration_minutes || ' minutes') > ?";
+            $start     = Carbon::parse($startTime);
 
-            $query->whereHas('tables', function ($q) use ($startTime, $guests, $overlapEndExpr) {
-                $end = \Carbon\Carbon::parse($startTime)->addMinutes(90);
+            $query->whereHas('tables', function ($q) use ($start, $guests) {
                 $q->where('is_active', true)
-                  ->where('seats', '>=', $guests)
-                  ->whereDoesntHave('reservations', function ($r) use ($startTime, $end, $overlapEndExpr) {
-                      $r->whereNotIn('status', ['cancelled'])
-                        ->where('start_time', '<', $end)
-                        ->whereRaw($overlapEndExpr, [$startTime]);
-                  });
+                  ->where('seats', '>=', $guests);
+                ReservationHelper::applyAvailabilityFilter($q, $start);
             });
         }
 
