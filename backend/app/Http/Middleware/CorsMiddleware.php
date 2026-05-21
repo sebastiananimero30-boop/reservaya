@@ -8,7 +8,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CorsMiddleware
 {
-    private array $allowedOrigins = [
+    private array $defaultAllowedOrigins = [
         'http://localhost:3000',
         'http://localhost:5173',
         'http://127.0.0.1:3000',
@@ -18,11 +18,12 @@ class CorsMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         $origin = $request->header('Origin', '');
+        $allowedOrigins = $this->allowedOrigins();
 
         // Responder inmediatamente a preflight OPTIONS
         if ($request->isMethod('OPTIONS')) {
             return response('', 204)
-                ->header('Access-Control-Allow-Origin', in_array($origin, $this->allowedOrigins) ? $origin : '')
+                ->header('Access-Control-Allow-Origin', in_array($origin, $allowedOrigins, true) ? $origin : '')
                 ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
                 ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin')
                 ->header('Access-Control-Allow-Credentials', 'true')
@@ -31,7 +32,7 @@ class CorsMiddleware
 
         $response = $next($request);
 
-        if (in_array($origin, $this->allowedOrigins)) {
+        if (in_array($origin, $allowedOrigins, true)) {
             $response->headers->set('Access-Control-Allow-Origin', $origin);
             $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
             $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
@@ -40,5 +41,18 @@ class CorsMiddleware
         }
 
         return $response;
+    }
+
+    private function allowedOrigins(): array
+    {
+        $fromEnv = array_filter(array_map(
+            'trim',
+            explode(',', (string) env('CORS_ALLOWED_ORIGINS', ''))
+        ));
+
+        return array_values(array_unique([
+            ...$this->defaultAllowedOrigins,
+            ...$fromEnv,
+        ]));
     }
 }

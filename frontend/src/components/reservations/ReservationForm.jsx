@@ -30,6 +30,8 @@ export default function ReservationForm({ restaurant }) {
     restaurant?.id, datetime.date, datetime.time, datetime.guests
   )
   const availableTables = availability.tables ?? []
+  const requiresDeposit = STRIPE_ENABLED
+  const reservationBlocked = requiresDeposit && !payWithStripe
 
   useEffect(() => {
     setSelectedTable(null)
@@ -68,6 +70,7 @@ export default function ReservationForm({ restaurant }) {
   const onSubmit = (data) => {
     if (!user) { toast.error('Inicia sesión para reservar'); navigate('/login'); return }
     if (!selectedTable) { toast.error('Selecciona una mesa'); return }
+    if (reservationBlocked) { toast.error('Selecciona garantizar con deposito para reservar'); return }
 
     const reservationData = {
       restaurant_id: restaurant.id,
@@ -78,7 +81,7 @@ export default function ReservationForm({ restaurant }) {
     }
 
     // Si quiere pagar con Stripe, abre el modal en vez de crear la reserva directamente
-    if (payWithStripe && STRIPE_ENABLED) {
+    if (requiresDeposit) {
       setPendingData(reservationData)
       setShowPaymentModal(true)
       return
@@ -190,10 +193,12 @@ export default function ReservationForm({ restaurant }) {
           </div>
         )}
 
-        <button type="submit" disabled={mutation.isPending}
-          className="btn-primary w-full flex items-center justify-center gap-2 py-3">
+        <button type="submit" disabled={mutation.isPending || reservationBlocked}
+          className="btn-primary w-full flex items-center justify-center gap-2 py-3 disabled:opacity-50 disabled:cursor-not-allowed">
           {mutation.isPending ? (
             <><Loader2 className="w-4 h-4 animate-spin" /> Confirmando...</>
+          ) : reservationBlocked ? (
+            <><CreditCard className="w-4 h-4" /> Selecciona garantizar con deposito</>
           ) : (
             <><CheckCircle className="w-4 h-4" /> {payWithStripe ? 'Continuar al pago' : 'Confirmar Reserva'}</>
           )}
