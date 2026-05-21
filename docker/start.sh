@@ -25,7 +25,7 @@ php artisan route:clear
 php artisan view:clear
 
 if [ "${RUN_MIGRATIONS:-true}" = "true" ]; then
-  php artisan migrate --force
+  php artisan migrate --force && php artisan db:seed --force
 fi
 
 php artisan serve --host=127.0.0.1 --port=8000 &
