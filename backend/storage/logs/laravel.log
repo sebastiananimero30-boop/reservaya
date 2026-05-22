@@ -676,3 +676,19 @@ Did you mean one of these?
 #28 C:/Users/Usuario/Desktop/reservaya-complete/backend/vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php(23): require_once('C://Users//Usuari...')
 #29 {main}
 "} 
+[2026-05-22 15:02:47] local.ERROR: Command "server" is not defined.
+
+Did you mean one of these?
+    make:observer
+    serve {"exception":"[object] (Symfony\\Component\\Console\\Exception\\CommandNotFoundException(code: 0): Command \"server\" is not defined.
+
+Did you mean one of these?
+    make:observer
+    serve at C:/Users/Usuario/Desktop/reservaya-complete/backend/vendor/symfony/console/Application.php:759)
+[stacktrace]
+#0 C:/Users/Usuario/Desktop/reservaya-complete/backend/vendor/symfony/console/Application.php(298): Symfony/Component/Console/Application->find('server')
+#1 C:/Users/Usuario/Desktop/reservaya-complete/backend/vendor/symfony/console/Application.php(195): Symfony/Component/Console/Application->doRun(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#2 C:/Users/Usuario/Desktop/reservaya-complete/backend/vendor/laravel/framework/src/Illuminate/Foundation/Console/Kernel.php(198): Symfony/Component/Console/Application->run(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#3 C:/Users/Usuario/Desktop/reservaya-complete/backend/artisan(16): Illuminate/Foundation/Console/Kernel->handle(Object(Symfony/Component/Console/Input/ArgvInput), Object(Symfony/Component/Console/Output/ConsoleOutput))
+#4 {main}
+"} 
