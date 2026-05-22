@@ -9,9 +9,11 @@ use App\Models\Category;
 use App\Models\Restaurant;
 use App\Models\RestaurantPhoto;
 use App\Models\Schedule;
+use App\Models\Table;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -124,26 +126,45 @@ class AdminController extends Controller
             'latitude'    => 'nullable|numeric|between:-90,90',
             'longitude'   => 'nullable|numeric|between:-180,180',
             'capacity'    => 'nullable|integer|min:1|max:1000',
+            'table_count' => 'nullable|integer|min:1|max:200',
+            'table_seats' => 'nullable|integer|min:1|max:20',
         ]);
 
-        $restaurant = Restaurant::create([
-            ...$data,
-            'rating'    => 0,
-            'is_active' => true,
-        ]);
+        $tableCount = (int) ($data['table_count'] ?? 0);
+        $tableSeats = (int) ($data['table_seats'] ?? 4);
+        unset($data['table_count'], $data['table_seats']);
 
-        // Creo el horario de la semana completa, el lunes lo dejo cerrado por defecto
-        foreach (range(0, 6) as $day) {
-            Schedule::create([
-                'restaurant_id' => $restaurant->id,
-                'day_of_week'   => $day,
-                'open_time'     => '11:00:00',
-                'close_time'    => '23:00:00',
-                'is_closed'     => ($day === 1),
-            ]);
+        if ($tableCount > 0 && empty($data['capacity'])) {
+            $data['capacity'] = $tableCount * $tableSeats;
         }
 
+        $restaurant = DB::transaction(function () use ($data, $tableCount, $tableSeats) {
+            $restaurant = Restaurant::create([
+                ...$data,
+                'rating'    => 0,
+                'is_active' => true,
+            ]);
+
+            // Creo el horario de la semana completa, el lunes lo dejo cerrado por defecto
+            foreach (range(0, 6) as $day) {
+                Schedule::create([
+                    'restaurant_id' => $restaurant->id,
+                    'day_of_week'   => $day,
+                    'open_time'     => '11:00:00',
+                    'close_time'    => '23:00:00',
+                    'is_closed'     => ($day === 1),
+                ]);
+            }
+
+            if ($tableCount > 0) {
+                $this->syncRestaurantTables($restaurant, $tableCount, $tableSeats);
+            }
+
+            return $restaurant;
+        });
+
         $restaurant->load(['category', 'photos']);
+        $restaurant->loadCount(['tables as tables_count' => fn ($q) => $q->where('is_active', true)]);
 
         return response()->json(new RestaurantResource($restaurant), 201);
     }
@@ -296,15 +317,62 @@ class AdminController extends Controller
             'latitude'    => 'nullable|numeric|between:-90,90',
             'longitude'   => 'nullable|numeric|between:-180,180',
             'capacity'    => 'nullable|integer|min:1|max:1000',
+            'table_count' => 'nullable|integer|min:1|max:200',
+            'table_seats' => 'nullable|integer|min:1|max:20',
             'is_active'   => 'sometimes|boolean',
         ]);
 
-        $restaurant->update($data);
+        $tableCount = $data['table_count'] ?? null;
+        $tableSeats = $data['table_seats'] ?? null;
+        unset($data['table_count'], $data['table_seats']);
+
+        DB::transaction(function () use ($restaurant, $data, $tableCount, $tableSeats) {
+            $restaurant->update($data);
+
+            if ($tableCount !== null || $tableSeats !== null) {
+                $currentCount = $restaurant->tables()->where('is_active', true)->count();
+                $currentSeats = $restaurant->tables()->where('is_active', true)->orderBy('id')->value('seats') ?? 4;
+
+                $this->syncRestaurantTables(
+                    $restaurant,
+                    (int) ($tableCount ?? $currentCount ?: 1),
+                    (int) ($tableSeats ?? $currentSeats)
+                );
+            }
+        });
+
         $restaurant->load(['category', 'photos']);
+        $restaurant->loadCount(['tables as tables_count' => fn ($q) => $q->where('is_active', true)]);
 
         return response()->json([
             'message'    => 'Restaurante actualizado correctamente.',
             'restaurant' => new RestaurantResource($restaurant),
         ]);
+    }
+
+    private function syncRestaurantTables(Restaurant $restaurant, int $tableCount, int $tableSeats): void
+    {
+        $activeTables = $restaurant->tables()->where('is_active', true)->orderBy('id')->get();
+
+        foreach ($activeTables as $index => $table) {
+            if ($index < $tableCount) {
+                $table->update([
+                    'name'  => 'Mesa ' . ($index + 1),
+                    'seats' => $tableSeats,
+                ]);
+            } else {
+                $table->update(['is_active' => false]);
+            }
+        }
+
+        for ($number = $activeTables->count() + 1; $number <= $tableCount; $number++) {
+            Table::create([
+                'restaurant_id' => $restaurant->id,
+                'name'          => 'Mesa ' . $number,
+                'seats'         => $tableSeats,
+                'price'         => 0,
+                'is_active'     => true,
+            ]);
+        }
     }
 }

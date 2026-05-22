@@ -222,12 +222,13 @@ function OwnersTab() {
 
 function RestaurantsTab() {
   const qc = useQueryClient()
+  const emptyRestaurantForm = { name: '', description: '', address: '', zone: '', phone: '', category_id: '', owner_id: '', latitude: '', longitude: '', capacity: '40', table_count: '10', table_seats: '4' }
   const [showModal, setShowModal] = useState(false)
   const [coverModal, setCoverModal] = useState(null)
   const [editModal, setEditModal] = useState(null)
   const [coverUrl, setCoverUrl] = useState('')
   const [editForm, setEditForm] = useState({})
-  const [form, setForm] = useState({ name: '', description: '', address: '', zone: '', phone: '', category_id: '', owner_id: '', latitude: '', longitude: '', capacity: '40' })
+  const [form, setForm] = useState(emptyRestaurantForm)
 
   const { data: restData, isLoading: restLoading } = useQuery({
     queryKey: ['admin-restaurants'],
@@ -241,11 +242,11 @@ function RestaurantsTab() {
   const categories  = catsData ?? []
 
   const createMutation = useMutation({
-    mutationFn: () => createRestaurant({ ...form, category_id: Number(form.category_id), owner_id: form.owner_id ? Number(form.owner_id) : null, latitude: form.latitude ? Number(form.latitude) : null, longitude: form.longitude ? Number(form.longitude) : null, capacity: Number(form.capacity) }),
+    mutationFn: () => createRestaurant({ ...form, category_id: Number(form.category_id), owner_id: form.owner_id ? Number(form.owner_id) : null, latitude: form.latitude ? Number(form.latitude) : null, longitude: form.longitude ? Number(form.longitude) : null, capacity: Number(form.capacity), table_count: Number(form.table_count), table_seats: Number(form.table_seats) }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-restaurants'] })
       setShowModal(false)
-      setForm({ name: '', description: '', address: '', zone: '', phone: '', category_id: '', owner_id: '', latitude: '', longitude: '', capacity: '40' })
+      setForm(emptyRestaurantForm)
       toast.success('Restaurante creado')
     },
     onError: (err) => {
@@ -277,6 +278,8 @@ function RestaurantsTab() {
       latitude: editForm.latitude ? Number(editForm.latitude) : undefined,
       longitude: editForm.longitude ? Number(editForm.longitude) : undefined,
       capacity: editForm.capacity ? Number(editForm.capacity) : undefined,
+      table_count: editForm.table_count ? Number(editForm.table_count) : undefined,
+      table_seats: editForm.table_seats ? Number(editForm.table_seats) : undefined,
     }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-restaurants'] })
@@ -322,6 +325,7 @@ function RestaurantsTab() {
                   <span className="text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 px-2 py-0.5 rounded-full">{r.categoria}</span>
                 </div>
                 <p className="text-xs text-stone-500 mt-0.5">{r.direccion} · {r.zona}</p>
+                <p className="text-xs text-stone-400 mt-1">{r.mesas_count ?? 0} mesas · {r.personas_mesa || 0} personas por mesa</p>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <button onClick={() => { setCoverModal({ id: r.id, nombre: r.nombre }); setCoverUrl(r.foto_portada || '') }}
@@ -333,6 +337,7 @@ function RestaurantsTab() {
                   setEditForm({
                     name: r.nombre, description: r.descripcion, address: r.direccion,
                     zone: r.zona, phone: r.telefono, latitude: r.latitud, longitude: r.longitud,
+                    capacity: r.capacidad, table_count: r.mesas_count || '', table_seats: r.personas_mesa || '',
                   })
                 }}
                   className="p-2 rounded-lg text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-700 hover:text-primary-500 transition-colors" title="Editar">
@@ -425,6 +430,16 @@ function RestaurantsTab() {
                   <input type="number" step="any" className="input-base mt-1" value={editForm.longitude || ''} onChange={e => setEditForm({ ...editForm, longitude: e.target.value })} />
                 </label>
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="block">
+                  <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Cantidad de mesas</span>
+                  <input type="number" min="1" max="200" className="input-base mt-1" value={editForm.table_count || ''} onChange={e => setEditForm({ ...editForm, table_count: e.target.value })} />
+                </label>
+                <label className="block">
+                  <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Personas por mesa</span>
+                  <input type="number" min="1" max="20" className="input-base mt-1" value={editForm.table_seats || ''} onChange={e => setEditForm({ ...editForm, table_seats: e.target.value })} />
+                </label>
+              </div>
               <label className="block">
                 <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Descripción</span>
                 <textarea rows={3} className="input-base resize-none mt-1" value={editForm.description || ''} onChange={e => setEditForm({ ...editForm, description: e.target.value })} />
@@ -444,7 +459,7 @@ function RestaurantsTab() {
       <AnimatePresence>
         {showModal && (
           <Modal open={showModal} onClose={() => setShowModal(false)} title="Nuevo restaurante">
-            <form onSubmit={e => { e.preventDefault(); if (!form.name.trim() || !form.address.trim() || !form.zone.trim() || !form.category_id) return toast.error('Nombre, dirección, zona y categoría son requeridos'); createMutation.mutate() }}
+            <form onSubmit={e => { e.preventDefault(); if (!form.name.trim() || !form.address.trim() || !form.zone.trim() || !form.category_id) return toast.error('Nombre, dirección, zona y categoría son requeridos'); if (!Number(form.table_count) || !Number(form.table_seats)) return toast.error('Cantidad de mesas y personas por mesa son requeridas'); createMutation.mutate() }}
               className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
               <label className="block">
                 <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Nombre *</span>
@@ -488,6 +503,16 @@ function RestaurantsTab() {
                 <label className="block">
                   <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Longitud</span>
                   <input type="number" step="any" className="input-base mt-1" value={form.longitude} onChange={e => setForm({ ...form, longitude: e.target.value })} placeholder="-75.2321" />
+                </label>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="block">
+                  <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Cantidad de mesas *</span>
+                  <input type="number" min="1" max="200" className="input-base mt-1" value={form.table_count} onChange={e => setForm({ ...form, table_count: e.target.value, capacity: String((Number(e.target.value) || 0) * (Number(form.table_seats) || 0)) })} placeholder="10" />
+                </label>
+                <label className="block">
+                  <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Personas por mesa *</span>
+                  <input type="number" min="1" max="20" className="input-base mt-1" value={form.table_seats} onChange={e => setForm({ ...form, table_seats: e.target.value, capacity: String((Number(form.table_count) || 0) * (Number(e.target.value) || 0)) })} placeholder="4" />
                 </label>
               </div>
               <label className="block">

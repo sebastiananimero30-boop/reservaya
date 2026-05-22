@@ -31,6 +31,8 @@ export function adaptRestaurant(r) {
     horario:       buildScheduleString(r.schedules) ?? r.horario ?? '',
     telefono:      r.phone       ?? r.telefono ?? '',
     capacidad:     r.capacity    ?? r.capacidad ?? 0,
+    mesas_count:   r.tables_count ?? r.mesas_count ?? 0,
+    personas_mesa: r.table_seats  ?? r.personas_mesa ?? '',
     // Mesas: el backend devuelve available_tables con TableResource
     mesas:         (r.available_tables ?? r.mesas ?? []).map(adaptTable),
     menu:          (r.menu ?? r.menu_items ?? []).map(adaptMenuItem),

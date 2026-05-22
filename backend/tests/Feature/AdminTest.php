@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Restaurant;
+use App\Models\Table;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -101,10 +102,19 @@ class AdminTest extends TestCase
                              'zone'        => 'Centro',
                              'category_id' => $category->id,
                              'capacity'    => 40,
+                             'table_count' => 8,
+                             'table_seats' => 5,
                          ]);
 
         $response->assertStatus(201);
         $this->assertDatabaseHas('restaurants', ['name' => 'Nuevo Restaurante']);
+        $this->assertSame(8, Table::where('restaurant_id', $response->json('id'))->where('is_active', true)->count());
+        $this->assertDatabaseHas('tables', [
+            'restaurant_id' => $response->json('id'),
+            'name'          => 'Mesa 1',
+            'seats'         => 5,
+            'is_active'     => true,
+        ]);
     }
 
     public function test_admin_can_assign_owner_to_restaurant(): void

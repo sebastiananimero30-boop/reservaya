@@ -22,6 +22,7 @@ class RestaurantResource extends JsonResource
             'capacity'     => $this->capacity,
             'phone'        => $this->phone,
             'tables_count' => $this->tables_count ?? $this->tables()->where('is_active', true)->count(),
+            'table_seats'  => $this->tables()->where('is_active', true)->orderBy('id')->value('seats'),
             'category'     => [
                 'id'   => $this->category->id,
                 'name' => $this->category->name,
