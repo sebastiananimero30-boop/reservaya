@@ -8,6 +8,14 @@ services:
     dockerContext: .
     healthCheckPath: /api/health
     autoDeployTrigger: commit
+    dockerBuildArgs:
+      - VITE_API_URL=/api
+      - VITE_GOOGLE_CLIENT_ID
+      - VITE_STRIPE_KEY
+      - VITE_CLOUDINARY_CLOUD_NAME
+      - VITE_CLOUDINARY_UPLOAD_PRESET
+      - VITE_MAPS_KEY
+      - VITE_GROQ_KEY
     envVars:
       - key: APP_NAME
         value: ReservaYa
@@ -65,9 +73,43 @@ services:
         sync: false
       - key: VITE_GOOGLE_CLIENT_ID
         sync: false
+      - key: MAIL_MAILER
+        value: smtp
+      - key: MAIL_HOST
+        value: smtp.gmail.com
+      - key: MAIL_PORT
+        value: 587
+      - key: MAIL_ENCRYPTION
+        value: tls
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: MAIL_FROM_ADDRESS
+        sync: false
+      - key: MAIL_FROM_NAME
+        value: ReservaYa
+      - key: SANCTUM_STATEFUL_DOMAINS
+        value: reservaya-3cbw.onrender.com
+      - key: SESSION_DOMAIN
+        value: .onrender.com
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://reservaya-3cbw.onrender.com
+      - key: FRONTEND_URL
+        value: https://reservaya-3cbw.onrender.com
+      - key: STRIPE_SUCCESS_URL
+        value: https://reservaya-3cbw.onrender.com/mis-reservas?stripe=success&session_id={CHECKOUT_SESSION_ID}
+      - key: STRIPE_CANCEL_URL
+        value: https://reservaya-3cbw.onrender.com/mis-reservas?stripe=cancelled
+      - key: GOOGLE_REDIRECT_URI
+        value: https://reservaya-3cbw.onrender.com/auth/google/callback
       - key: VITE_CLOUDINARY_CLOUD_NAME
         sync: false
       - key: VITE_CLOUDINARY_UPLOAD_PRESET
+        sync: false
+      - key: VITE_MAPS_KEY
+        sync: false
+      - key: VITE_GROQ_KEY
         sync: false
 
 databases:
