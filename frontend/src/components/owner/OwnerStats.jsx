@@ -3,7 +3,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   LineChart, Line, Cell
 } from 'recharts'
-import { TrendingUp, Users, CalendarCheck, XCircle, CheckCircle, Star } from 'lucide-react'
+import { TrendingUp, Users, CalendarCheck, XCircle, CheckCircle, Star, UserX } from 'lucide-react'
 import Spinner from '../common/Spinner'
 import { getOwnerStats } from '../../api/owner'
 
@@ -15,6 +15,7 @@ function StatCard({ icon: Icon, label, value, sub, color = 'primary' }) {
     green:    'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400',
     red:      'bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400',
     blue:     'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400',
+    orange:   'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-300',
   }
   return (
     <div className="bg-white dark:bg-stone-800 border border-stone-100 dark:border-stone-700 rounded-2xl p-5">
@@ -64,10 +65,11 @@ export default function OwnerStats({ restaurantId, restaurantName }) {
   return (
     <div className="space-y-6">
       {/* Tarjetas resumen */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard icon={CalendarCheck} label="Total reservas"   value={summary.total_reservations} color="primary" />
         <StatCard icon={CheckCircle}   label="Confirmadas"      value={summary.confirmed}  color="green" />
         <StatCard icon={XCircle}       label="Canceladas"       value={summary.cancelled}  color="red" />
+        <StatCard icon={UserX}         label="No se presentaron" value={summary.no_show ?? 0} color="orange" />
         <StatCard icon={Users}         label="Comensales"       value={summary.total_guests} sub={`Promedio ${summary.avg_guests} por reserva`} color="blue" />
       </div>
 

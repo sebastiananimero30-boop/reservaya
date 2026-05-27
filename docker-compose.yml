@@ -56,6 +56,7 @@ services:
         php artisan key:generate --force &&
         php artisan migrate --force &&
         php artisan db:seed --force &&
+        (php artisan schedule:work > storage/logs/schedule.log 2>&1 &) &&
         php artisan serve --host=0.0.0.0 --port=8000
       "
 

@@ -32,7 +32,7 @@ class ReservationHelper
         $overlapEndExpr = self::overlapEndExpr();
 
         return \App\Models\Reservation::where('table_id', $tableId)
-            ->whereNotIn('status', ['cancelled'])
+            ->whereNotIn('status', ['cancelled', 'no_show'])
             ->where(function ($q) use ($start, $end, $overlapEndExpr) {
                 $q->where('start_time', '<', $end)
                   ->whereRaw($overlapEndExpr, [$start]);
@@ -50,7 +50,7 @@ class ReservationHelper
         $overlapEndExpr = self::overlapEndExpr();
 
         return $query->whereDoesntHave('reservations', function ($q) use ($start, $end, $overlapEndExpr) {
-            $q->whereNotIn('status', ['cancelled'])
+            $q->whereNotIn('status', ['cancelled', 'no_show'])
               ->where(function ($inner) use ($start, $end, $overlapEndExpr) {
                   $inner->where('start_time', '<', $end)
                         ->whereRaw($overlapEndExpr, [$start]);

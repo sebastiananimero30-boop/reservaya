@@ -119,6 +119,7 @@ describe('adaptReservation', () => {
       ['pending', 'pendiente'],
       ['cancelled', 'cancelada'],
       ['completed', 'completada'],
+      ['no_show', 'no_presentada'],
     ]
     estados.forEach(([input, expected]) => {
       const result = adaptReservation({ id: 1, status: input, start_time: '2026-05-10T19:00:00', guests: 1 })

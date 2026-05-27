@@ -28,6 +28,7 @@ if [ "${RUN_MIGRATIONS:-true}" = "true" ]; then
   php artisan migrate --force && php artisan db:seed --force
 fi
 
+php artisan schedule:work > storage/logs/schedule.log 2>&1 &
 php artisan serve --host=127.0.0.1 --port=8000 &
 
 exec nginx -g "daemon off;"

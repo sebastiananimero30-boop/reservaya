@@ -276,4 +276,57 @@ class ReservationTest extends TestCase
         $response->assertStatus(200);
         $this->assertCount(0, $response->json('data'));
     }
+
+    public function test_overdue_active_reservations_are_marked_as_no_show(): void
+    {
+        $client = User::factory()->client()->create();
+        $table  = Table::factory()->create(['seats' => 4, 'is_active' => true]);
+
+        $confirmed = Reservation::create([
+            'user_id'          => $client->id,
+            'restaurant_id'    => $table->restaurant_id,
+            'table_id'         => $table->id,
+            'start_time'       => now()->subMinutes(16),
+            'duration_minutes' => 90,
+            'guests'           => 2,
+            'status'           => 'confirmed',
+        ]);
+
+        $pending = Reservation::create([
+            'user_id'          => $client->id,
+            'restaurant_id'    => $table->restaurant_id,
+            'table_id'         => $table->id,
+            'start_time'       => now()->subMinutes(20),
+            'duration_minutes' => 90,
+            'guests'           => 2,
+            'status'           => 'pending',
+        ]);
+
+        $recent = Reservation::create([
+            'user_id'          => $client->id,
+            'restaurant_id'    => $table->restaurant_id,
+            'table_id'         => $table->id,
+            'start_time'       => now()->subMinutes(14),
+            'duration_minutes' => 90,
+            'guests'           => 2,
+            'status'           => 'confirmed',
+        ]);
+
+        $completed = Reservation::create([
+            'user_id'          => $client->id,
+            'restaurant_id'    => $table->restaurant_id,
+            'table_id'         => $table->id,
+            'start_time'       => now()->subMinutes(30),
+            'duration_minutes' => 90,
+            'guests'           => 2,
+            'status'           => 'completed',
+        ]);
+
+        $this->artisan('reservations:mark-no-shows')->assertSuccessful();
+
+        $this->assertSame('no_show', $confirmed->fresh()->status);
+        $this->assertSame('no_show', $pending->fresh()->status);
+        $this->assertSame('confirmed', $recent->fresh()->status);
+        $this->assertSame('completed', $completed->fresh()->status);
+    }
 }

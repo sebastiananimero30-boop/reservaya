@@ -281,7 +281,8 @@ class AdminController extends Controller
             'total_reservations' => \App\Models\Reservation::count(),
             'total_confirmed'    => \App\Models\Reservation::where('status', 'confirmed')->count(),
             'total_cancelled'    => \App\Models\Reservation::where('status', 'cancelled')->count(),
-            'total_guests'       => (int) \App\Models\Reservation::whereNotIn('status', ['cancelled'])->sum('guests'),
+            'total_no_show'      => \App\Models\Reservation::where('status', 'no_show')->count(),
+            'total_guests'       => (int) \App\Models\Reservation::whereNotIn('status', ['cancelled', 'no_show'])->sum('guests'),
         ];
 
         return response()->json([

@@ -15,6 +15,7 @@ const STATUS_CONFIG = {
   confirmada: { label: 'Confirmada', color: 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400' },
   cancelada:  { label: 'Cancelada',  color: 'bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400' },
   completada: { label: 'Completada', color: 'bg-stone-100 text-stone-600 dark:bg-stone-700 dark:text-stone-400' },
+  no_presentada: { label: 'No se presentó', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-300' },
 }
 
 export default function MyReservations() {

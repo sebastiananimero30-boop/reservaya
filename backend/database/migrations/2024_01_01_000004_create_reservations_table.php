@@ -16,7 +16,7 @@ return new class extends Migration
             $table->dateTime('start_time');
             $table->unsignedSmallInteger('duration_minutes')->default(90);
             $table->unsignedTinyInteger('guests');
-            $table->enum('status', ['pending', 'confirmed', 'cancelled', 'completed'])->default('pending');
+            $table->enum('status', ['pending', 'confirmed', 'cancelled', 'completed', 'no_show'])->default('pending');
             $table->text('notes')->nullable();
             $table->string('qr_code')->nullable();
             $table->timestamps();

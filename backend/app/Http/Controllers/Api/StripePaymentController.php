@@ -23,7 +23,7 @@ class StripePaymentController extends Controller
             abort(403, 'No tienes permiso para pagar esta reserva.');
         }
 
-        if (in_array($reservation->status, ['cancelled', 'completed'], true)) {
+        if (in_array($reservation->status, ['cancelled', 'completed', 'no_show'], true)) {
             abort(422, 'Esta reserva no se puede pagar.');
         }
 

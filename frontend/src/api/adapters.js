@@ -96,7 +96,7 @@ export function adaptReservation(r) {
 }
 
 function normalizeStatus(s) {
-  const map = { confirmed: 'confirmada', pending: 'pendiente', cancelled: 'cancelada', completed: 'completada' }
+  const map = { confirmed: 'confirmada', pending: 'pendiente', cancelled: 'cancelada', completed: 'completada', no_show: 'no_presentada' }
   return map[s] ?? s ?? 'pendiente'
 }
 

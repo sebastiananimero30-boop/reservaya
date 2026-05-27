@@ -23,8 +23,9 @@ const STATUS_BADGE = {
   pending:   'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400',
   completed: 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400',
   cancelled: 'bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400',
+  no_show:   'bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-300',
 }
-const STATUS_LABEL = { confirmed: 'Confirmada', pending: 'Pendiente', completed: 'Completada', cancelled: 'Cancelada' }
+const STATUS_LABEL = { confirmed: 'Confirmada', pending: 'Pendiente', completed: 'Completada', cancelled: 'Cancelada', no_show: 'No se presentó' }
 
 export default function OwnerDashboard() {
   const { user, loading } = useAuth()
@@ -323,6 +324,7 @@ export default function OwnerDashboard() {
                     <option value="pending">Pendientes</option>
                     <option value="completed">Completadas</option>
                     <option value="cancelled">Canceladas</option>
+                    <option value="no_show">No se presentaron</option>
                   </select>
                   <button onClick={() => reservationsQuery.refetch()} disabled={reservationsQuery.isFetching}
                     className="btn-outline p-2" aria-label="Actualizar">
@@ -395,10 +397,16 @@ export default function OwnerDashboard() {
                             <CheckCircle className="w-3.5 h-3.5" /> Completar
                           </button>
                         )}
-                        {r.status !== 'cancelled' && r.status !== 'completed' && (
+                        {r.status !== 'cancelled' && r.status !== 'completed' && r.status !== 'no_show' && (
                           <button onClick={() => statusMutation.mutate({ id: r.id, status: 'cancelled' })} disabled={statusMutation.isPending}
                             className="px-3 py-1.5 text-xs rounded-lg text-red-500 border border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/20 transition-colors flex items-center gap-1">
                             <XCircle className="w-3.5 h-3.5" /> Cancelar
+                          </button>
+                        )}
+                        {r.status !== 'cancelled' && r.status !== 'completed' && r.status !== 'no_show' && (
+                          <button onClick={() => statusMutation.mutate({ id: r.id, status: 'no_show' })} disabled={statusMutation.isPending}
+                            className="px-3 py-1.5 text-xs rounded-lg text-orange-600 border border-orange-200 hover:bg-orange-50 dark:border-orange-800 dark:hover:bg-orange-900/20 transition-colors flex items-center gap-1">
+                            <XCircle className="w-3.5 h-3.5" /> No se presentó
                           </button>
                         )}
                       </div>

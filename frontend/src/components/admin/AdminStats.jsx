@@ -12,12 +12,14 @@ const STATUS_COLORS = {
   pending:    '#eab308',
   completed:  '#3b82f6',
   cancelled:  '#ef4444',
+  no_show:    '#f97316',
 }
 const STATUS_LABELS = {
   confirmed: 'Confirmadas',
   pending:   'Pendientes',
   completed: 'Completadas',
   cancelled: 'Canceladas',
+  no_show:   'No se presentaron',
 }
 const CAT_COLORS = ['#f97316','#fb923c','#fdba74','#fed7aa','#ea580c','#c2410c']
 

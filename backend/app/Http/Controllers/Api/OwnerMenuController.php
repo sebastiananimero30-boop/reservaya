@@ -73,7 +73,7 @@ class OwnerMenuController extends Controller
     }
 
     // Devuelve las reservas de un restaurante con soporte para filtrar por estado.
-    // El propietario puede ver confirmadas, pendientes, completadas o canceladas
+    // El propietario puede ver confirmadas, pendientes, completadas, canceladas o no presentadas
     public function reservations(Request $request, Restaurant $restaurant): JsonResponse
     {
         $this->authorizeRestaurant($request, $restaurant);
@@ -124,8 +124,8 @@ class OwnerMenuController extends Controller
         }
 
         if ($data['complete'] ?? false) {
-            if ($reservation->status === 'cancelled') {
-                abort(422, 'Esta reserva fue cancelada y no se puede completar.');
+            if (in_array($reservation->status, ['cancelled', 'no_show'], true)) {
+                abort(422, 'Esta reserva ya no se puede completar.');
             }
 
             if ($reservation->status !== 'completed') {
@@ -142,7 +142,7 @@ class OwnerMenuController extends Controller
     }
 
     // Permite al propietario cambiar el estado de una reserva de su restaurante.
-    // Puede confirmar, completar o cancelar
+    // Puede confirmar, completar, cancelar o marcar no asistencia
     public function updateReservationStatus(Request $request, Reservation $reservation): JsonResponse
     {
         $this->ensureOwner($request);
@@ -153,7 +153,7 @@ class OwnerMenuController extends Controller
         }
 
         $data = $request->validate([
-            'status' => 'required|in:confirmed,cancelled,completed',
+            'status' => 'required|in:confirmed,cancelled,completed,no_show',
         ]);
 
         $reservation->update(['status' => $data['status']]);
@@ -175,7 +175,7 @@ class OwnerMenuController extends Controller
             $byHour = \DB::table('reservations')
                 ->selectRaw("EXTRACT(HOUR FROM start_time)::int AS hour, COUNT(*) AS total")
                 ->where('restaurant_id', $restaurant->id)
-                ->whereNotIn('status', ['cancelled'])
+                ->whereNotIn('status', ['cancelled', 'no_show'])
                 ->groupByRaw("EXTRACT(HOUR FROM start_time)::int")
                 ->orderByRaw("EXTRACT(HOUR FROM start_time)::int")
                 ->get();
@@ -183,7 +183,7 @@ class OwnerMenuController extends Controller
             $byHour = \DB::table('reservations')
                 ->selectRaw("CAST(strftime('%H', start_time) AS INTEGER) AS hour, COUNT(*) AS total")
                 ->where('restaurant_id', $restaurant->id)
-                ->whereNotIn('status', ['cancelled'])
+                ->whereNotIn('status', ['cancelled', 'no_show'])
                 ->groupByRaw("strftime('%H', start_time)")
                 ->orderByRaw("strftime('%H', start_time)")
                 ->get();
@@ -194,7 +194,7 @@ class OwnerMenuController extends Controller
             $byDay = \DB::table('reservations')
                 ->selectRaw("EXTRACT(DOW FROM start_time)::int AS day_num, COUNT(*) AS total")
                 ->where('restaurant_id', $restaurant->id)
-                ->whereNotIn('status', ['cancelled'])
+                ->whereNotIn('status', ['cancelled', 'no_show'])
                 ->groupByRaw("EXTRACT(DOW FROM start_time)::int")
                 ->orderByRaw("EXTRACT(DOW FROM start_time)::int")
                 ->get();
@@ -202,7 +202,7 @@ class OwnerMenuController extends Controller
             $byDay = \DB::table('reservations')
                 ->selectRaw("CAST(strftime('%w', start_time) AS INTEGER) AS day_num, COUNT(*) AS total")
                 ->where('restaurant_id', $restaurant->id)
-                ->whereNotIn('status', ['cancelled'])
+                ->whereNotIn('status', ['cancelled', 'no_show'])
                 ->groupByRaw("strftime('%w', start_time)")
                 ->orderByRaw("strftime('%w', start_time)")
                 ->get();
@@ -234,8 +234,9 @@ class OwnerMenuController extends Controller
         $confirmedCount    = \App\Models\Reservation::where('restaurant_id', $restaurant->id)->where('status', 'confirmed')->count();
         $cancelledCount    = \App\Models\Reservation::where('restaurant_id', $restaurant->id)->where('status', 'cancelled')->count();
         $completedCount    = \App\Models\Reservation::where('restaurant_id', $restaurant->id)->where('status', 'completed')->count();
-        $totalGuests       = \App\Models\Reservation::where('restaurant_id', $restaurant->id)->whereNotIn('status', ['cancelled'])->sum('guests');
-        $avgGuests         = \App\Models\Reservation::where('restaurant_id', $restaurant->id)->whereNotIn('status', ['cancelled'])->avg('guests');
+        $noShowCount       = \App\Models\Reservation::where('restaurant_id', $restaurant->id)->where('status', 'no_show')->count();
+        $totalGuests       = \App\Models\Reservation::where('restaurant_id', $restaurant->id)->whereNotIn('status', ['cancelled', 'no_show'])->sum('guests');
+        $avgGuests         = \App\Models\Reservation::where('restaurant_id', $restaurant->id)->whereNotIn('status', ['cancelled', 'no_show'])->avg('guests');
 
         return response()->json([
             'summary' => [
@@ -243,6 +244,7 @@ class OwnerMenuController extends Controller
                 'confirmed'          => $confirmedCount,
                 'cancelled'          => $cancelledCount,
                 'completed'          => $completedCount,
+                'no_show'            => $noShowCount,
                 'total_guests'       => (int) $totalGuests,
                 'avg_guests'         => round((float) $avgGuests, 1),
             ],

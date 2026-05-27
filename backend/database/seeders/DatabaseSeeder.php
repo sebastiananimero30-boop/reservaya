@@ -376,7 +376,7 @@ class DatabaseSeeder extends Seeder
                 : "datetime(start_time, '+' || duration_minutes || ' minutes') > ?";
 
             $conflict = Reservation::where('table_id', $table->id)
-                ->whereNotIn('status', ['cancelled'])
+                ->whereNotIn('status', ['cancelled', 'no_show'])
                 ->where('start_time', '<', $end)
                 ->whereRaw($overlapExpr, [$startTime])
                 ->exists();

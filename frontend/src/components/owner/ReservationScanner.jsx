@@ -3,12 +3,13 @@ import { Camera, CheckCircle, Keyboard, Loader2, Search, Square, Upload } from '
 import { BrowserQRCodeReader } from '@zxing/browser'
 import clsx from 'clsx'
 
-const STATUS_LABEL = { confirmed: 'Confirmada', pending: 'Pendiente', completed: 'Completada', cancelled: 'Cancelada' }
+const STATUS_LABEL = { confirmed: 'Confirmada', pending: 'Pendiente', completed: 'Completada', cancelled: 'Cancelada', no_show: 'No se presentó' }
 const STATUS_BADGE = {
   confirmed: 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400',
   pending: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400',
   completed: 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400',
   cancelled: 'bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400',
+  no_show: 'bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-300',
 }
 
 export default function ReservationScanner({ restaurantName, onScan, onComplete, loading = false, result }) {
@@ -182,6 +183,8 @@ export default function ReservationScanner({ restaurantName, onScan, onComplete,
                   </div>
                 ) : scanned.status === 'cancelled' ? (
                   <p className="text-sm font-medium text-red-500">Esta reserva fue cancelada.</p>
+                ) : scanned.status === 'no_show' ? (
+                  <p className="text-sm font-medium text-orange-600 dark:text-orange-300">Esta reserva fue marcada como no presentada.</p>
                 ) : (
                   <button type="button" onClick={() => onComplete(scanned)} disabled={loading} className="btn-primary w-full text-sm flex items-center justify-center gap-2">
                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
