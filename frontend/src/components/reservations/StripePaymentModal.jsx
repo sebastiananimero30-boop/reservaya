@@ -94,9 +94,6 @@ function CheckoutForm({ reservationData, onSuccess, onClose }) {
             onChange={(e) => setCardComplete(e.complete)}
           />
         </div>
-        <p className="text-xs text-stone-400 mt-1.5">
-          Prueba: <span className="font-mono">4242 4242 4242 4242</span> · cualquier fecha futura · cualquier CVC
-        </p>
       </div>
 
       {/* Botón de pago */}

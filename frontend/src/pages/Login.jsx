@@ -51,14 +51,14 @@ export default function Login() {
             <div className="flex-1 h-px bg-stone-200 dark:bg-stone-700" />
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" autoComplete="off">
             <div>
               <label className="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-1.5">
                 Correo electrónico
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
-                <input type="email" placeholder="tu@email.com"
+                <input type="email" placeholder="tu@email.com" autoComplete="off"
                   {...register('email', { required: 'El email es requerido' })}
                   className="input-base pl-10"
                 />
@@ -72,7 +72,7 @@ export default function Login() {
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
-                <input type="password" placeholder="••••••••"
+                <input type="password" placeholder="••••••••" autoComplete="new-password"
                   {...register('password', { required: 'La contraseña es requerida', minLength: { value: 6, message: 'Mínimo 6 caracteres' } })}
                   className="input-base pl-10"
                 />
