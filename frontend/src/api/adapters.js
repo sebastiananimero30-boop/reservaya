@@ -57,11 +57,17 @@ export function adaptMenuItem(item) {
 
 export function adaptTable(t) {
   if (!t) return null
+
+  // Extraer el número de la mesa del campo name ("Mesa 3" → 3)
+  // Si no se puede extraer, usar el índice o el id como fallback
+  const nameStr = t.name ?? t.nombre ?? ''
+  const numFromName = parseInt(nameStr.replace(/[^0-9]/g, ''), 10)
+
   return {
     id:         t.id,
-    numero:     t.number ?? t.numero ?? t.id,
+    numero:     t.number ?? t.numero ?? (isNaN(numFromName) ? t.id : numFromName),
     capacidad:  t.seats  ?? t.capacidad ?? 2,
-    nombre:     t.name   ?? t.nombre   ?? `Mesa ${t.id}`,
+    nombre:     nameStr || `Mesa ${t.id}`,
     disponible: t.is_available ?? t.disponible ?? true,
     precio:     t.price  ?? t.precio ?? 0,
   }
