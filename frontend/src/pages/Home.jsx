@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { MapPin, Calendar, Users, Search, Star, ChevronDown } from 'lucide-react'
+import { MapPin, Users, Search, Star, ChevronDown } from 'lucide-react'
 import RestaurantFilters from '../components/restaurants/RestaurantFilters'
 import RestaurantGrid from '../components/restaurants/RestaurantGrid'
 import { useRestaurants } from '../hooks/useRestaurants'
@@ -12,10 +12,17 @@ export default function Home() {
     categoria: '', zona: '', precio: '',
     search: searchParams.get('search') || ''
   })
+  const [heroSearch, setHeroSearch] = useState('')
+  const [heroGuests, setHeroGuests] = useState(2)
 
   useEffect(() => {
     setFilters(f => ({ ...f, search: searchParams.get('search') || '' }))
   }, [searchParams])
+
+  const handleHeroSearch = () => {
+    setFilters(f => ({ ...f, search: heroSearch }))
+    document.getElementById('restaurantes-section')?.scrollIntoView({ behavior: 'smooth' })
+  }
 
   const { data, isLoading, error } = useRestaurants(filters)
   const restaurants = data?.data || []
@@ -95,12 +102,19 @@ export default function Home() {
                   <p className="text-sm font-semibold text-stone-800">Ibagué, Tolima</p>
                 </div>
               </div>
-              {/* Fecha */}
-              <div className="flex items-center gap-3 flex-1 min-w-[110px] px-5 py-4 border-r border-stone-100">
-                <Calendar className="w-4 h-4 text-primary-500 flex-shrink-0" />
-                <div>
-                  <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wider">Fecha</p>
-                  <p className="text-sm font-semibold text-stone-800">Hoy</p>
+              {/* Buscar restaurante */}
+              <div className="flex items-center gap-3 flex-1 min-w-[180px] px-5 py-4 border-r border-stone-100">
+                <Search className="w-4 h-4 text-primary-500 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wider">Restaurante</p>
+                  <input
+                    type="text"
+                    value={heroSearch}
+                    onChange={e => setHeroSearch(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleHeroSearch()}
+                    placeholder="Buscar cocina, zona..."
+                    className="text-sm font-semibold text-stone-800 bg-transparent outline-none w-full placeholder:text-stone-400 placeholder:font-normal"
+                  />
                 </div>
               </div>
               {/* Personas */}
@@ -108,11 +122,22 @@ export default function Home() {
                 <Users className="w-4 h-4 text-primary-500 flex-shrink-0" />
                 <div>
                   <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wider">Personas</p>
-                  <p className="text-sm font-semibold text-stone-800">2 personas</p>
+                  <select
+                    value={heroGuests}
+                    onChange={e => setHeroGuests(Number(e.target.value))}
+                    className="text-sm font-semibold text-stone-800 bg-transparent outline-none cursor-pointer"
+                  >
+                    {[1,2,3,4,5,6,7,8].map(n => (
+                      <option key={n} value={n}>{n} {n === 1 ? 'persona' : 'personas'}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
               {/* Botón */}
-              <button className="bg-primary-500 hover:bg-primary-600 transition-colors text-white flex items-center gap-2 px-7 py-4 font-bold text-sm">
+              <button
+                onClick={handleHeroSearch}
+                className="bg-primary-500 hover:bg-primary-600 transition-colors text-white flex items-center gap-2 px-7 py-4 font-bold text-sm"
+              >
                 <Search className="w-4 h-4" />
                 Buscar
               </button>
@@ -159,7 +184,7 @@ export default function Home() {
       </div>
 
       {/* ── Contenido ── */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div id="restaurantes-section" className="max-w-7xl mx-auto px-4 py-8">
         <RestaurantFilters filters={filters} onChange={setFilters} />
 
         <div className="flex items-center justify-between mb-6">
