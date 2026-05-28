@@ -364,7 +364,7 @@ export default function OwnerDashboard() {
                           {r.start_time && (
                             <span className="flex items-center gap-1">
                               <Clock className="w-3.5 h-3.5" />
-                              {new Date(r.start_time).toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' })}
+                              {new Date(r.start_time).toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short', hour12: true })}
                             </span>
                           )}
                           {r.guests && (

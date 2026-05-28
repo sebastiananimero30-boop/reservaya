@@ -172,7 +172,7 @@ export default function ReservationScanner({ restaurantName, onScan, onComplete,
                 </div>
 
                 <div className="text-sm text-stone-500 space-y-1">
-                  {scanned.start_time && <p>{new Date(scanned.start_time).toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' })}</p>}
+                  {scanned.start_time && <p>{new Date(scanned.start_time).toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short', hour12: true })}</p>}
                   <p>{scanned.guests} {scanned.guests === 1 ? 'persona' : 'personas'} - {scanned.table}</p>
                   {scanned.guest_email && <p className="text-xs">{scanned.guest_email}</p>}
                 </div>

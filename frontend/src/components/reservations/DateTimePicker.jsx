@@ -1,6 +1,16 @@
 import { Calendar, Clock, Users } from 'lucide-react'
 import clsx from 'clsx'
 
+// Convierte hora 24h (\"19:00\") a formato 12h (\"7:00 PM\")
+function format12Hour(time24) {
+  if (!time24) return ''
+  const [hours, minutes] = time24.split(':')
+  const h = parseInt(hours, 10)
+  const period = h >= 12 ? 'PM' : 'AM'
+  const h12 = h % 12 || 12
+  return `${h12}:${minutes} ${period}`
+}
+
 export default function DateTimePicker({ value, onChange }) {
   const today = new Date().toISOString().split('T')[0]
   const times = ['12:00','12:30','13:00','13:30','14:00','18:00','18:30',
@@ -61,7 +71,7 @@ export default function DateTimePicker({ value, onChange }) {
                   : 'bg-white dark:bg-stone-700 border border-stone-200 dark:border-stone-600 text-stone-600 dark:text-stone-400 hover:border-primary-300'
               )}
             >
-              {t}
+              {format12Hour(t)}
             </button>
           ))}
         </div>

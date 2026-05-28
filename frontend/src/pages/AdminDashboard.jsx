@@ -33,7 +33,7 @@ function Modal({ open, onClose, title, children }) {
         initial={{ opacity: 0, scale: 0.95, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="relative bg-white dark:bg-stone-800 rounded-3xl shadow-2xl w-full max-w-md p-6 z-10"
+        className="relative bg-white dark:bg-stone-800 rounded-3xl shadow-2xl w-full max-w-2xl p-6 z-10"
       >
         <div className="flex items-center justify-between mb-5">
           <h2 className="font-bold text-xl">{title}</h2>
@@ -220,9 +220,70 @@ function OwnersTab() {
   )
 }
 
+function TableEditor({ tables = [], onChange }) {
+  const updateTable = (index, field, value) => {
+    onChange(tables.map((table, i) => i === index ? { ...table, [field]: value } : table))
+  }
+
+  const addTable = () => {
+    onChange([...tables, { name: `Mesa ${tables.length + 1}`, seats: '2' }])
+  }
+
+  const removeTable = (index) => {
+    if (tables.length <= 1) return
+    onChange(tables.filter((_, i) => i !== index))
+  }
+
+  const totalSeats = tables.reduce((sum, table) => sum + (Number(table.seats) || 0), 0)
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Mesas *</span>
+        <button type="button" onClick={addTable} className="btn-outline px-3 py-1.5 text-xs inline-flex items-center gap-1">
+          <Plus className="w-3.5 h-3.5" /> Agregar mesa
+        </button>
+      </div>
+      <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+        {tables.map((table, index) => (
+          <div key={table.id ?? index} className="grid grid-cols-[1fr_120px_36px] gap-2 items-center">
+            <input
+              className="input-base text-sm"
+              value={table.name ?? ''}
+              onChange={e => updateTable(index, 'name', e.target.value)}
+              placeholder={`Mesa ${index + 1}`}
+            />
+            <input
+              type="number"
+              min="1"
+              max="20"
+              className="input-base text-sm"
+              value={table.seats ?? ''}
+              onChange={e => updateTable(index, 'seats', e.target.value)}
+              aria-label="Personas"
+            />
+            <button
+              type="button"
+              onClick={() => removeTable(index)}
+              disabled={tables.length <= 1}
+              className="h-10 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center"
+              aria-label="Eliminar mesa"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-stone-400">
+        Total: {tables.length} {tables.length === 1 ? 'mesa' : 'mesas'} · {totalSeats} puestos
+      </p>
+    </div>
+  )
+}
+
 function RestaurantsTab() {
   const qc = useQueryClient()
-  const emptyRestaurantForm = { name: '', description: '', address: '', zone: '', phone: '', category_id: '', owner_id: '', latitude: '', longitude: '', capacity: '40', table_count: '10', table_seats: '4' }
+  const emptyRestaurantForm = { name: '', description: '', address: '', zone: '', phone: '', category_id: '', owner_id: '', latitude: '', longitude: '', capacity: '1', tables: [{ name: 'Mesa 1', seats: '1' }] }
   const [showModal, setShowModal] = useState(false)
   const [coverModal, setCoverModal] = useState(null)
   const [editModal, setEditModal] = useState(null)
@@ -241,8 +302,26 @@ function RestaurantsTab() {
   const owners      = ownersData ?? []
   const categories  = catsData ?? []
 
+  const buildTablesPayload = (tables = []) =>
+    tables.map((table, index) => ({
+      id: table.id,
+      name: table.name?.trim() || `Mesa ${index + 1}`,
+      seats: Number(table.seats),
+    })).filter(table => Number.isInteger(table.seats) && table.seats >= 1)
+
+  const capacityFromTables = (tables = []) =>
+    buildTablesPayload(tables).reduce((sum, table) => sum + table.seats, 0)
+
   const createMutation = useMutation({
-    mutationFn: () => createRestaurant({ ...form, category_id: Number(form.category_id), owner_id: form.owner_id ? Number(form.owner_id) : null, latitude: form.latitude ? Number(form.latitude) : null, longitude: form.longitude ? Number(form.longitude) : null, capacity: Number(form.capacity), table_count: Number(form.table_count), table_seats: Number(form.table_seats) }),
+    mutationFn: () => createRestaurant({
+      ...form,
+      category_id: Number(form.category_id),
+      owner_id: form.owner_id ? Number(form.owner_id) : null,
+      latitude: form.latitude ? Number(form.latitude) : null,
+      longitude: form.longitude ? Number(form.longitude) : null,
+      capacity: capacityFromTables(form.tables),
+      tables: buildTablesPayload(form.tables),
+    }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-restaurants'] })
       setShowModal(false)
@@ -277,9 +356,8 @@ function RestaurantsTab() {
       category_id: editForm.category_id ? Number(editForm.category_id) : undefined,
       latitude: editForm.latitude ? Number(editForm.latitude) : undefined,
       longitude: editForm.longitude ? Number(editForm.longitude) : undefined,
-      capacity: editForm.capacity ? Number(editForm.capacity) : undefined,
-      table_count: editForm.table_count ? Number(editForm.table_count) : undefined,
-      table_seats: editForm.table_seats ? Number(editForm.table_seats) : undefined,
+      capacity: capacityFromTables(editForm.tables),
+      tables: buildTablesPayload(editForm.tables),
     }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-restaurants'] })
@@ -325,7 +403,9 @@ function RestaurantsTab() {
                   <span className="text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 px-2 py-0.5 rounded-full">{r.categoria}</span>
                 </div>
                 <p className="text-xs text-stone-500 mt-0.5">{r.direccion} · {r.zona}</p>
-                <p className="text-xs text-stone-400 mt-1">{r.mesas_count ?? 0} mesas · {r.personas_mesa || 0} personas por mesa</p>
+                <p className="text-xs text-stone-400 mt-1">
+                  {r.mesas_count ?? 0} mesas · {r.mesas?.length ? `${r.mesas.reduce((sum, mesa) => sum + (Number(mesa.capacidad) || 0), 0)} puestos` : `${r.personas_mesa || 0} personas por mesa`}
+                </p>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <button onClick={() => { setCoverModal({ id: r.id, nombre: r.nombre }); setCoverUrl(r.foto_portada || '') }}
@@ -337,7 +417,10 @@ function RestaurantsTab() {
                   setEditForm({
                     name: r.nombre, description: r.descripcion, address: r.direccion,
                     zone: r.zona, phone: r.telefono, latitude: r.latitud, longitude: r.longitud,
-                    capacity: r.capacidad, table_count: r.mesas_count || '', table_seats: r.personas_mesa || '',
+                    capacity: r.capacidad,
+                    tables: r.mesas?.length
+                      ? r.mesas.map(mesa => ({ id: mesa.id, name: mesa.nombre, seats: String(mesa.capacidad) }))
+                      : [{ name: 'Mesa 1', seats: String(r.personas_mesa || 1) }],
                   })
                 }}
                   className="p-2 rounded-lg text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-700 hover:text-primary-500 transition-colors" title="Editar">
@@ -430,16 +513,10 @@ function RestaurantsTab() {
                   <input type="number" step="any" className="input-base mt-1" value={editForm.longitude || ''} onChange={e => setEditForm({ ...editForm, longitude: e.target.value })} />
                 </label>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <label className="block">
-                  <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Cantidad de mesas</span>
-                  <input type="number" min="1" max="200" className="input-base mt-1" value={editForm.table_count || ''} onChange={e => setEditForm({ ...editForm, table_count: e.target.value })} />
-                </label>
-                <label className="block">
-                  <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Personas por mesa</span>
-                  <input type="number" min="1" max="20" className="input-base mt-1" value={editForm.table_seats || ''} onChange={e => setEditForm({ ...editForm, table_seats: e.target.value })} />
-                </label>
-              </div>
+              <TableEditor
+                tables={editForm.tables ?? [{ name: 'Mesa 1', seats: '1' }]}
+                onChange={(tables) => setEditForm({ ...editForm, tables })}
+              />
               <label className="block">
                 <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Descripción</span>
                 <textarea rows={3} className="input-base resize-none mt-1" value={editForm.description || ''} onChange={e => setEditForm({ ...editForm, description: e.target.value })} />
@@ -459,7 +536,7 @@ function RestaurantsTab() {
       <AnimatePresence>
         {showModal && (
           <Modal open={showModal} onClose={() => setShowModal(false)} title="Nuevo restaurante">
-            <form onSubmit={e => { e.preventDefault(); if (!form.name.trim() || !form.address.trim() || !form.zone.trim() || !form.category_id) return toast.error('Nombre, dirección, zona y categoría son requeridos'); if (!Number(form.table_count) || !Number(form.table_seats)) return toast.error('Cantidad de mesas y personas por mesa son requeridas'); createMutation.mutate() }}
+            <form onSubmit={e => { e.preventDefault(); if (!form.name.trim() || !form.address.trim() || !form.zone.trim() || !form.category_id) return toast.error('Nombre, dirección, zona y categoría son requeridos'); if (!buildTablesPayload(form.tables).length) return toast.error('Agrega al menos una mesa con capacidad válida'); createMutation.mutate() }}
               className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
               <label className="block">
                 <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Nombre *</span>
@@ -505,16 +582,10 @@ function RestaurantsTab() {
                   <input type="number" step="any" className="input-base mt-1" value={form.longitude} onChange={e => setForm({ ...form, longitude: e.target.value })} placeholder="-75.2321" />
                 </label>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <label className="block">
-                  <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Cantidad de mesas *</span>
-                  <input type="number" min="1" max="200" className="input-base mt-1" value={form.table_count} onChange={e => setForm({ ...form, table_count: e.target.value, capacity: String((Number(e.target.value) || 0) * (Number(form.table_seats) || 0)) })} placeholder="10" />
-                </label>
-                <label className="block">
-                  <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Personas por mesa *</span>
-                  <input type="number" min="1" max="20" className="input-base mt-1" value={form.table_seats} onChange={e => setForm({ ...form, table_seats: e.target.value, capacity: String((Number(form.table_count) || 0) * (Number(e.target.value) || 0)) })} placeholder="4" />
-                </label>
-              </div>
+              <TableEditor
+                tables={form.tables}
+                onChange={(tables) => setForm({ ...form, tables })}
+              />
               <label className="block">
                 <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Descripción</span>
                 <textarea rows={2} className="input-base resize-none mt-1" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Descripción del restaurante..." />

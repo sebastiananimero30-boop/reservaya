@@ -99,7 +99,7 @@ class AdminController extends Controller
     {
         $this->ensureAdmin($request);
 
-        $restaurants = Restaurant::with(['category', 'photos'])
+        $restaurants = Restaurant::with(['category', 'photos', 'tables'])
             ->withCount(['tables as tables_count' => fn ($q) => $q->where('is_active', true)])
             ->orderBy('name')
             ->get();
@@ -128,17 +128,23 @@ class AdminController extends Controller
             'capacity'    => 'nullable|integer|min:1|max:1000',
             'table_count' => 'nullable|integer|min:1|max:200',
             'table_seats' => 'nullable|integer|min:1|max:20',
+            'tables'      => 'nullable|array|max:200',
+            'tables.*.name' => 'nullable|string|max:255',
+            'tables.*.seats' => 'required_with:tables|integer|min:1|max:20',
         ]);
 
+        $tables = $data['tables'] ?? null;
         $tableCount = (int) ($data['table_count'] ?? 0);
         $tableSeats = (int) ($data['table_seats'] ?? 4);
-        unset($data['table_count'], $data['table_seats']);
+        unset($data['table_count'], $data['table_seats'], $data['tables']);
 
-        if ($tableCount > 0 && empty($data['capacity'])) {
+        if ($tables && empty($data['capacity'])) {
+            $data['capacity'] = collect($tables)->sum(fn ($table) => (int) $table['seats']);
+        } elseif ($tableCount > 0 && empty($data['capacity'])) {
             $data['capacity'] = $tableCount * $tableSeats;
         }
 
-        $restaurant = DB::transaction(function () use ($data, $tableCount, $tableSeats) {
+        $restaurant = DB::transaction(function () use ($data, $tableCount, $tableSeats, $tables) {
             $restaurant = Restaurant::create([
                 ...$data,
                 'rating'    => 0,
@@ -156,14 +162,16 @@ class AdminController extends Controller
                 ]);
             }
 
-            if ($tableCount > 0) {
+            if ($tables) {
+                $this->syncRestaurantTableList($restaurant, $tables);
+            } elseif ($tableCount > 0) {
                 $this->syncRestaurantTables($restaurant, $tableCount, $tableSeats);
             }
 
             return $restaurant;
         });
 
-        $restaurant->load(['category', 'photos']);
+        $restaurant->load(['category', 'photos', 'tables']);
         $restaurant->loadCount(['tables as tables_count' => fn ($q) => $q->where('is_active', true)]);
 
         return response()->json(new RestaurantResource($restaurant), 201);
@@ -320,17 +328,28 @@ class AdminController extends Controller
             'capacity'    => 'nullable|integer|min:1|max:1000',
             'table_count' => 'nullable|integer|min:1|max:200',
             'table_seats' => 'nullable|integer|min:1|max:20',
+            'tables'      => 'nullable|array|max:200',
+            'tables.*.id' => 'nullable|integer|exists:tables,id',
+            'tables.*.name' => 'nullable|string|max:255',
+            'tables.*.seats' => 'required_with:tables|integer|min:1|max:20',
             'is_active'   => 'sometimes|boolean',
         ]);
 
+        $tables = $data['tables'] ?? null;
         $tableCount = $data['table_count'] ?? null;
         $tableSeats = $data['table_seats'] ?? null;
-        unset($data['table_count'], $data['table_seats']);
+        unset($data['table_count'], $data['table_seats'], $data['tables']);
 
-        DB::transaction(function () use ($restaurant, $data, $tableCount, $tableSeats) {
+        if ($tables && empty($data['capacity'])) {
+            $data['capacity'] = collect($tables)->sum(fn ($table) => (int) $table['seats']);
+        }
+
+        DB::transaction(function () use ($restaurant, $data, $tableCount, $tableSeats, $tables) {
             $restaurant->update($data);
 
-            if ($tableCount !== null || $tableSeats !== null) {
+            if ($tables) {
+                $this->syncRestaurantTableList($restaurant, $tables);
+            } elseif ($tableCount !== null || $tableSeats !== null) {
                 $currentCount = $restaurant->tables()->where('is_active', true)->count();
                 $currentSeats = $restaurant->tables()->where('is_active', true)->orderBy('id')->value('seats') ?? 4;
 
@@ -342,7 +361,7 @@ class AdminController extends Controller
             }
         });
 
-        $restaurant->load(['category', 'photos']);
+        $restaurant->load(['category', 'photos', 'tables']);
         $restaurant->loadCount(['tables as tables_count' => fn ($q) => $q->where('is_active', true)]);
 
         return response()->json([
@@ -375,5 +394,43 @@ class AdminController extends Controller
                 'is_active'     => true,
             ]);
         }
+    }
+
+    private function syncRestaurantTableList(Restaurant $restaurant, array $tables): void
+    {
+        $keptIds = [];
+
+        foreach (array_values($tables) as $index => $tableData) {
+            $name = trim((string) ($tableData['name'] ?? '')) ?: 'Mesa ' . ($index + 1);
+            $seats = (int) $tableData['seats'];
+            $tableId = $tableData['id'] ?? null;
+
+            if ($tableId) {
+                $table = $restaurant->tables()->whereKey($tableId)->first();
+                if (! $table) {
+                    continue;
+                }
+
+                $table->update([
+                    'name'      => $name,
+                    'seats'     => $seats,
+                    'is_active' => true,
+                ]);
+            } else {
+                $table = $restaurant->tables()->create([
+                    'name'      => $name,
+                    'seats'     => $seats,
+                    'price'     => 0,
+                    'is_active' => true,
+                ]);
+            }
+
+            $keptIds[] = $table->id;
+        }
+
+        $restaurant->tables()
+            ->where('is_active', true)
+            ->whereNotIn('id', $keptIds)
+            ->update(['is_active' => false]);
     }
 }

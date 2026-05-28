@@ -13,6 +13,16 @@ import clsx from 'clsx'
 
 const STRIPE_ENABLED = !!import.meta.env.VITE_STRIPE_KEY
 
+// Convierte hora 24h ("19:00") a formato 12h ("7:00 PM")
+function format12Hour(time24) {
+  if (!time24) return ''
+  const [hours, minutes] = time24.split(':')
+  const h = parseInt(hours, 10)
+  const period = h >= 12 ? 'PM' : 'AM'
+  const h12 = h % 12 || 12
+  return `${h12}:${minutes} ${period}`
+}
+
 export default function ReservationForm({ restaurant }) {
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -45,7 +55,7 @@ export default function ReservationForm({ restaurant }) {
         return
       }
       const mesa = res?.data?.table?.name ?? res?.table?.name ?? ''
-      const hora = datetime.time ?? ''
+      const hora = format12Hour(datetime.time ?? '')
       toast.success(`¡Reserva confirmada! ${mesa ? `${mesa} @ ` : ''}${hora} 🎉`)
       navigate('/mis-reservas')
     },
@@ -60,11 +70,18 @@ export default function ReservationForm({ restaurant }) {
   })
 
   const buildStartTime = () => {
-    const localDate = new Date(`${datetime.date}T${datetime.time}:00`)
-    const tzOffset = -localDate.getTimezoneOffset()
-    const sign = tzOffset >= 0 ? '+' : '-'
-    const pad = n => String(Math.floor(Math.abs(n))).padStart(2, '0')
-    return `${datetime.date}T${datetime.time}:00${sign}${pad(tzOffset / 60)}:${pad(tzOffset % 60)}`
+    // Construir ISO 8601 con offset local correcto
+    const dateStr = `${datetime.date}T${datetime.time}:00`
+    const dt = new Date(dateStr)
+    
+    // tzOffset está en minutos (negativo = detrás de UTC, positivo = adelante)
+    const offset = -dt.getTimezoneOffset()
+    const sign = offset >= 0 ? '+' : '-'
+    const absOffset = Math.abs(offset)
+    const hours = String(Math.floor(absOffset / 60)).padStart(2, '0')
+    const mins = String(absOffset % 60).padStart(2, '0')
+    
+    return `${dateStr}${sign}${hours}:${mins}`
   }
 
   const onSubmit = (data) => {
@@ -120,7 +137,7 @@ export default function ReservationForm({ restaurant }) {
                   availableTables.length && 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
                 )}
               >
-                {datetime.time}
+                {format12Hour(datetime.time)}
                 {!availableTables.length && <span className="block text-[10px]">sin mesas</span>}
               </button>
             </div>

@@ -117,6 +117,43 @@ class AdminTest extends TestCase
         ]);
     }
 
+    public function test_admin_can_create_restaurant_with_individual_table_capacities(): void
+    {
+        $admin    = User::factory()->admin()->create();
+        $category = Category::factory()->create();
+
+        $response = $this->actingAs($admin)
+                         ->postJson('/api/admin/restaurants', [
+                             'name'        => 'Bistro Mesas',
+                             'address'     => 'Calle 1 #2-3',
+                             'zone'        => 'Centro',
+                             'category_id' => $category->id,
+                             'tables'      => [
+                                 ['name' => 'Barra individual', 'seats' => 1],
+                                 ['name' => 'Mesa pareja', 'seats' => 2],
+                                 ['name' => 'Mesa familiar', 'seats' => 6],
+                             ],
+                         ]);
+
+        $response->assertStatus(201)
+                 ->assertJsonPath('capacity', 9)
+                 ->assertJsonPath('tables_count', 3);
+
+        $restaurantId = $response->json('id');
+
+        $this->assertDatabaseHas('tables', [
+            'restaurant_id' => $restaurantId,
+            'name'          => 'Barra individual',
+            'seats'         => 1,
+            'is_active'     => true,
+        ]);
+
+        $this->assertDatabaseHas('restaurants', [
+            'id'       => $restaurantId,
+            'capacity' => 9,
+        ]);
+    }
+
     public function test_admin_can_assign_owner_to_restaurant(): void
     {
         $admin      = User::factory()->admin()->create();
@@ -132,6 +169,48 @@ class AdminTest extends TestCase
         $this->assertDatabaseHas('restaurants', [
             'id'       => $restaurant->id,
             'owner_id' => $owner->id,
+        ]);
+    }
+
+    public function test_admin_can_update_individual_table_capacities(): void
+    {
+        $admin      = User::factory()->admin()->create();
+        $restaurant = Restaurant::factory()->create();
+        $tableOne   = Table::factory()->create([
+            'restaurant_id' => $restaurant->id,
+            'name'          => 'Mesa 1',
+            'seats'         => 4,
+            'is_active'     => true,
+        ]);
+        $tableTwo   = Table::factory()->create([
+            'restaurant_id' => $restaurant->id,
+            'name'          => 'Mesa 2',
+            'seats'         => 4,
+            'is_active'     => true,
+        ]);
+
+        $this->actingAs($admin)
+             ->patchJson("/api/admin/restaurants/{$restaurant->id}", [
+                 'tables' => [
+                     ['id' => $tableOne->id, 'name' => 'Individual', 'seats' => 1],
+                     ['id' => $tableTwo->id, 'name' => 'Pareja', 'seats' => 2],
+                     ['name' => 'Grupo', 'seats' => 8],
+                 ],
+             ])
+             ->assertStatus(200)
+             ->assertJsonPath('restaurant.capacity', 11);
+
+        $this->assertDatabaseHas('tables', [
+            'id'    => $tableOne->id,
+            'name'  => 'Individual',
+            'seats' => 1,
+        ]);
+
+        $this->assertDatabaseHas('tables', [
+            'restaurant_id' => $restaurant->id,
+            'name'          => 'Grupo',
+            'seats'         => 8,
+            'is_active'     => true,
         ]);
     }
 

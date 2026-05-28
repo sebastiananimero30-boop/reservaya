@@ -33,8 +33,8 @@ export function adaptRestaurant(r) {
     capacidad:     r.capacity    ?? r.capacidad ?? 0,
     mesas_count:   r.tables_count ?? r.mesas_count ?? 0,
     personas_mesa: r.table_seats  ?? r.personas_mesa ?? '',
-    // Mesas: el backend devuelve available_tables con TableResource
-    mesas:         (r.available_tables ?? r.mesas ?? []).map(adaptTable),
+    // Mesas: public availability uses available_tables; admin listing can include tables.
+    mesas:         (r.available_tables ?? r.tables ?? r.mesas ?? []).map(adaptTable),
     menu:          (r.menu ?? r.menu_items ?? []).map(adaptMenuItem),
     schedules:     r.schedules   ?? [],
   }

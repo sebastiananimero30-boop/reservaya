@@ -44,6 +44,9 @@ class RestaurantResource extends JsonResource
             'available_tables' => $this->whenLoaded('availableTables', function () {
                 return TableResource::collection($this->availableTables);
             }),
+            'tables' => $this->whenLoaded('tables', function () {
+                return TableResource::collection($this->tables->where('is_active', true)->sortBy('id')->values());
+            }),
             'menu_items' => $this->whenLoaded('menuItems', function () {
                 return MenuItemResource::collection($this->menuItems);
             }),

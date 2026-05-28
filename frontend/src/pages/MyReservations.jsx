@@ -18,6 +18,12 @@ const STATUS_CONFIG = {
   no_presentada: { label: 'No se presentó', color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-300' },
 }
 
+// Formatea hora a 12 horas con AM/PM
+function format12HourTime(date) {
+  if (!date) return ''
+  return date.toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit', hour12: true })
+}
+
 export default function MyReservations() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
@@ -102,7 +108,7 @@ export default function MyReservations() {
                       </span>
                       <span className="flex items-center gap-1.5">
                         <Clock className="w-4 h-4 text-primary-400" />
-                        {date.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}
+                        {format12HourTime(date)}
                       </span>
                       <span className="flex items-center gap-1.5">
                         <Users className="w-4 h-4 text-primary-400" />

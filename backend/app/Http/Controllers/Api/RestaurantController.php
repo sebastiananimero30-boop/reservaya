@@ -40,9 +40,9 @@ class RestaurantController extends Controller
         // Si el cliente manda fecha y hora, solo muestro restaurantes
         // que tengan al menos una mesa disponible para ese horario y número de personas
         if ($request->filled('date') && $request->filled('time')) {
-            $startTime = $request->date . ' ' . $request->time;
-            $guests    = (int) $request->get('guests', 1);
-            $start     = Carbon::parse($startTime);
+            $dateTime = $request->date . 'T' . $request->time . ':00';
+            $start    = Carbon::parse($dateTime); // Parsea la hora local
+            $guests   = (int) $request->get('guests', 1);
 
             $query->whereHas('tables', function ($q) use ($start, $guests) {
                 $q->where('is_active', true)
@@ -70,7 +70,8 @@ class RestaurantController extends Controller
         // Si el cliente está buscando para una fecha específica, calculo
         // qué mesas están libres en ese horario
         if ($request->filled('date') && $request->filled('time')) {
-            $startTime = $request->date . ' ' . $request->time;
+                $dateTime = $request->date . 'T' . $request->time . ':00';
+                $startTime = $dateTime; // Ya es ISO formato que Carbon puede parsear
             $guests    = (int) $request->get('guests', 1);
 
             $availableTables = $restaurant->availableTables($startTime, $guests);
@@ -95,14 +96,17 @@ class RestaurantController extends Controller
             'guests' => 'nullable|integer|min:1|max:20',
         ]);
 
-        $startTime = $request->date . ' ' . $request->time;
+        // Construir un datetime válido para buscar disponibilidad
+        // El cliente envía la hora en su zona local, la convertimos a ISO 8601
+        $dateTime = $request->date . 'T' . $request->time . ':00';
+        $startTime = Carbon::parse($dateTime); // Carbon parsea la hora local
         $guests    = (int) $request->get('guests', 1);
 
-        $tables = $restaurant->availableTables($startTime, $guests);
+        $tables = $restaurant->availableTables($startTime->toDateTimeString(), $guests);
 
         return response()->json([
             'restaurant_id' => $restaurant->id,
-            'start_time'    => $startTime,
+            'start_time'    => $startTime->toIso8601String(),
             'guests'        => $guests,
             'tables'        => TableResource::collection($tables),
         ]);
