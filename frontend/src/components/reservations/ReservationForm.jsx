@@ -26,7 +26,9 @@ function format12Hour(time24) {
 export default function ReservationForm({ restaurant }) {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const today = new Date().toISOString().split('T')[0]
+  const now = new Date()
+  const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+  const today = localDate.toISOString().split('T')[0]
 
   const [datetime, setDatetime] = useState({ date: today, time: '19:00', guests: 2 })
   const [selectedTable, setSelectedTable] = useState(null)
