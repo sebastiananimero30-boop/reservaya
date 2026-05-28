@@ -8,7 +8,12 @@ import './index.css'
 
 const queryClient = new QueryClient({
   defaultOptions: {
-    queries: { retry: 1, staleTime: 1000 * 60 * 5 },
+    queries: {
+      retry: 1,
+      staleTime: 1000 * 15,        // datos frescos por 15 segundos
+      refetchInterval: 1000 * 15,  // refetch automático cada 15 segundos
+      refetchIntervalInBackground: false, // solo cuando la pestaña está activa
+    },
   },
 })
 
