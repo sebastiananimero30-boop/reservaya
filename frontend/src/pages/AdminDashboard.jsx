@@ -667,16 +667,16 @@ export default function AdminDashboard() {
             <div className="space-y-6">
               <div className="bg-white dark:bg-stone-800 border border-stone-100 dark:border-stone-700 rounded-2xl p-6">
                 <h2 className="font-bold text-lg mb-1 flex items-center gap-2">
-                  <span>🗑️</span> Restaurantes eliminados
+                  Restaurantes eliminados
                 </h2>
                 <p className="text-sm text-stone-500 mb-4">Restaurantes en la papelera. Puedes restaurarlos o eliminarlos permanentemente.</p>
                 <TrashedRestaurants />
               </div>
               <div className="bg-white dark:bg-stone-800 border border-stone-100 dark:border-stone-700 rounded-2xl p-6">
                 <h2 className="font-bold text-lg mb-1 flex items-center gap-2">
-                  <span>🔑</span> Restablecer contraseña
+                  Restablecer contrasena
                 </h2>
-                <p className="text-sm text-stone-500 mb-4">Cambia la contraseña de un propietario que no puede acceder a su cuenta.</p>
+                <p className="text-sm text-stone-500 mb-4">Cambia la contrasena de un propietario que no puede acceder a su cuenta.</p>
                 <ResetOwnerPassword />
               </div>
             </div>
