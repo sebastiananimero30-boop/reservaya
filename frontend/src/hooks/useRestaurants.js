@@ -154,7 +154,7 @@ export function useAvailability(restaurantId, date, time, guests) {
         return { time: debouncedTime, tables: tables.map(adaptTable) }
       })
     },
-    enabled: !!(restaurantId && debouncedDate),
+    enabled: !!(restaurantId && debouncedDate && debouncedTime),
   })
 }
 

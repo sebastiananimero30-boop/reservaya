@@ -30,7 +30,7 @@ export default function ReservationForm({ restaurant }) {
   const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
   const today = localDate.toISOString().split('T')[0]
 
-  const [datetime, setDatetime] = useState({ date: today, time: '19:00', guests: 2 })
+  const [datetime, setDatetime] = useState({ date: today, time: '', guests: 2 })
   const [selectedTable, setSelectedTable] = useState(null)
   const [payWithStripe, setPayWithStripe] = useState(false)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
@@ -120,28 +120,22 @@ export default function ReservationForm({ restaurant }) {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <DateTimePicker value={datetime} onChange={setDatetime} />
 
-        {/* Horarios disponibles */}
+        {/* Disponibilidad de la hora seleccionada */}
         <div>
-          <h4 className="text-sm font-semibold mb-3 text-stone-700 dark:text-stone-300">
-            Horarios disponibles
-          </h4>
-          {loadingSlots ? (
+          {!datetime.time ? (
+            <p className="text-sm text-stone-400">Selecciona una hora para ver disponibilidad.</p>
+          ) : loadingSlots ? (
             <div className="flex items-center gap-2 text-sm text-stone-400">
-              <Loader2 className="w-4 h-4 animate-spin" /> Buscando disponibilidad...
+              <Loader2 className="w-4 h-4 animate-spin" /> Verificando disponibilidad...
+            </div>
+          ) : availableTables.length === 0 ? (
+            <div className="flex items-center gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-3 text-sm text-red-600 dark:text-red-400">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              Esa hora no está disponible. Prueba con otra hora o fecha.
             </div>
           ) : (
-            <div className="flex flex-wrap gap-2">
-              <button type="button"
-                disabled={!availableTables.length}
-                className={clsx(
-                  'px-3 py-2 rounded-xl text-xs font-semibold transition-all',
-                  !availableTables.length && 'opacity-40 cursor-not-allowed bg-stone-100 dark:bg-stone-700 text-stone-400',
-                  availableTables.length && 'bg-primary-500 text-white shadow-lg shadow-primary-500/30'
-                )}
-              >
-                {format12Hour(datetime.time)}
-                {!availableTables.length && <span className="block text-[10px]">sin mesas</span>}
-              </button>
+            <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-3 text-sm text-green-700 dark:text-green-400">
+              ✅ Hora disponible — {availableTables.length} {availableTables.length === 1 ? 'mesa libre' : 'mesas libres'}
             </div>
           )}
         </div>
