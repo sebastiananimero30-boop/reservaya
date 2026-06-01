@@ -13,7 +13,7 @@ import ImageUploader from '../components/common/ImageUploader'
 import {
   getOwners, createOwner, deleteOwner,
   getAdminRestaurants, createRestaurant, assignOwnerToRestaurant,
-  getAdminCategories, updateRestaurantCover, updateRestaurant,
+  getAdminCategories, updateRestaurantCover, updateRestaurant, deleteRestaurant,
 } from '../api/admin'
 import { adaptRestaurant } from '../api/adapters'
 import AdminStats from '../components/admin/AdminStats'
@@ -374,9 +374,17 @@ function RestaurantsTab() {
     },
   })
 
-  if (restLoading) return <div className="flex justify-center py-16"><Spinner /></div>
+  const deleteMutation = useMutation({
+    mutationFn: deleteRestaurant,
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['admin-restaurants'] })
+      qc.invalidateQueries({ queryKey: ['admin-restaurants-trashed'] })
+      toast.success('Restaurante eliminado')
+    },
+    onError: () => toast.error('No se pudo eliminar'),
+  })
 
-  return (
+  if (restLoading) return <div className="flex justify-center py-16"><Spinner /></div>
     <div>
       <div className="flex items-center justify-between mb-6">
         <p className="text-stone-500 text-sm"><strong className="text-stone-800 dark:text-stone-200">{restaurants.length}</strong> restaurantes registrados</p>
@@ -440,6 +448,14 @@ function RestaurantsTab() {
                 <Link to={`/restaurantes/${r.id}`} className="p-2 rounded-lg text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-700 hover:text-stone-600 transition-colors" title="Ver">
                   <Eye className="w-4 h-4" />
                 </Link>
+                <button
+                  onClick={() => { if (confirm(`¿Eliminar "${r.nombre}"? Podrás restaurarlo desde Herramientas.`)) deleteMutation.mutate(r.id) }}
+                  disabled={deleteMutation.isPending}
+                  className="p-2 rounded-lg text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 transition-colors"
+                  title="Eliminar"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </div>
             </div>
           ))}
