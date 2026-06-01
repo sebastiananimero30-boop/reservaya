@@ -9,6 +9,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/socialite": "^5.27",
         "laravel/tinker": "^2.9",
+        "resend/resend-laravel": "*",
         "stripe/stripe-php": "^20.1"
     },
     "require-dev": {
