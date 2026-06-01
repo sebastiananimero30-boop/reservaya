@@ -385,6 +385,8 @@ function RestaurantsTab() {
   })
 
   if (restLoading) return <div className="flex justify-center py-16"><Spinner /></div>
+
+  return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <p className="text-stone-500 text-sm"><strong className="text-stone-800 dark:text-stone-200">{restaurants.length}</strong> restaurantes registrados</p>
