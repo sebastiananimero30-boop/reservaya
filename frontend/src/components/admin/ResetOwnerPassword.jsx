@@ -1,16 +1,23 @@
 import { useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import { KeyRound, Eye, EyeOff, Copy, Check, Loader2 } from 'lucide-react'
-import { resetOwnerPassword } from '../../api/admin'
+import { resetOwnerPassword, getOwners } from '../../api/admin'
 import toast from 'react-hot-toast'
+import Spinner from '../common/Spinner'
 
-export default function ResetOwnerPassword({ owners = [] }) {
+export default function ResetOwnerPassword() {
   const [selectedId, setSelectedId] = useState('')
   const [customPassword, setCustomPassword] = useState('')
   const [useCustom, setUseCustom] = useState(false)
   const [result, setResult] = useState(null)
   const [showPass, setShowPass] = useState(false)
   const [copied, setCopied] = useState(false)
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['admin-owners'],
+    queryFn: () => getOwners().then(r => r.data),
+  })
+  const owners = data ?? []
 
   const mutation = useMutation({
     mutationFn: () => resetOwnerPassword(selectedId, useCustom ? customPassword : null),
@@ -34,8 +41,7 @@ export default function ResetOwnerPassword({ owners = [] }) {
     setUseCustom(false)
   }
 
-  if (result) return (
-    <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-2xl p-5 space-y-3">
+  if (result) return (    <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-2xl p-5 space-y-3">
       <p className="font-semibold text-green-700 dark:text-green-400">✅ Contraseña actualizada</p>
       <p className="text-sm text-stone-600 dark:text-stone-400">{result.message}</p>
       <div className="bg-white dark:bg-stone-800 rounded-xl p-3 flex items-center justify-between gap-3">

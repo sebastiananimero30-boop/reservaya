@@ -649,8 +649,20 @@ export default function AdminDashboard() {
           {tab === 'stats'       && <AdminStats />}
           {tab === 'tools'       && (
             <div className="space-y-6">
-              <TrashedRestaurants />
-              <ResetOwnerPassword />
+              <div className="bg-white dark:bg-stone-800 border border-stone-100 dark:border-stone-700 rounded-2xl p-6">
+                <h2 className="font-bold text-lg mb-1 flex items-center gap-2">
+                  <span>🗑️</span> Restaurantes eliminados
+                </h2>
+                <p className="text-sm text-stone-500 mb-4">Restaurantes en la papelera. Puedes restaurarlos o eliminarlos permanentemente.</p>
+                <TrashedRestaurants />
+              </div>
+              <div className="bg-white dark:bg-stone-800 border border-stone-100 dark:border-stone-700 rounded-2xl p-6">
+                <h2 className="font-bold text-lg mb-1 flex items-center gap-2">
+                  <span>🔑</span> Restablecer contraseña
+                </h2>
+                <p className="text-sm text-stone-500 mb-4">Cambia la contraseña de un propietario que no puede acceder a su cuenta.</p>
+                <ResetOwnerPassword />
+              </div>
             </div>
           )}
         </motion.div>
