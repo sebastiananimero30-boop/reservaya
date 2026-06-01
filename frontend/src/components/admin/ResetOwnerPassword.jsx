@@ -73,9 +73,12 @@ export default function ResetOwnerPassword() {
           className="input-base text-sm"
         >
           <option value="">-- Selecciona un propietario --</option>
-          {owners.map(o => (
-            <option key={o.id} value={o.id}>{o.name} ({o.email})</option>
-          ))}
+          {isLoading
+            ? <option disabled>Cargando...</option>
+            : owners.map(o => (
+              <option key={o.id} value={String(o.id)}>{o.name} ({o.email})</option>
+            ))
+          }
         </select>
       </div>
 
