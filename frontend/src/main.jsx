@@ -10,8 +10,8 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
-      staleTime: 1000 * 3,         // datos frescos por 3 segundos
-      refetchInterval: 1000 * 3,   // refetch automático cada 3 segundos
+      staleTime: 1000 * 30,
+      refetchInterval: 1000 * 30,
       refetchIntervalInBackground: false,
     },
   },
