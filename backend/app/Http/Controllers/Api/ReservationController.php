@@ -147,6 +147,24 @@ class ReservationController extends Controller
 
         $reservation->update(['status' => 'cancelled']);
 
+        // Reembolso automático del depósito si existe
+        if ($reservation->payment_intent_id && ! $reservation->deposit_refunded) {
+            try {
+                \Stripe\Stripe::setApiKey(config('services.stripe.secret'));
+                $intent = \Stripe\PaymentIntent::retrieve($reservation->payment_intent_id);
+
+                if ($intent->status === 'requires_capture') {
+                    $intent->cancel();
+                } elseif ($intent->status === 'succeeded') {
+                    \Stripe\Refund::create(['payment_intent' => $reservation->payment_intent_id]);
+                }
+
+                $reservation->update(['deposit_refunded' => true]);
+            } catch (\Exception $e) {
+                \Log::warning('Reembolso automático fallido: ' . $e->getMessage());
+            }
+        }
+
         return response()->json(['message' => 'Reserva cancelada correctamente.', 'id' => $reservation->id]);
     }
 }
