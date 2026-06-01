@@ -67,6 +67,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('restaurants/{restaurant}/menu',        [OwnerMenuController::class, 'store']);
         Route::patch('menu-items/{menuItem}',               [OwnerMenuController::class, 'update']);
         Route::delete('menu-items/{menuItem}',              [OwnerMenuController::class, 'destroy']);
+        Route::get('restaurants/{restaurant}/menu/trashed', [OwnerMenuController::class, 'trashed']);
+        Route::patch('menu-items/{id}/restore',             [OwnerMenuController::class, 'restore']);
+        Route::delete('menu-items/{id}/force',              [OwnerMenuController::class, 'forceDestroy']);
         Route::get('restaurants/{restaurant}/reservations', [OwnerMenuController::class, 'reservations']);
         Route::post('restaurants/{restaurant}/reservations/scan', [OwnerMenuController::class, 'scanReservation']);
         Route::patch('reservations/{reservation}/status',   [OwnerMenuController::class, 'updateReservationStatus']);
@@ -75,16 +78,21 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Panel del administrador — solo accesible para usuarios con rol admin
     Route::prefix('admin')->group(function () {
-        Route::get('owners',                            [AdminController::class, 'owners']);
-        Route::post('owners',                           [AdminController::class, 'createOwner']);
-        Route::delete('owners/{user}',                  [AdminController::class, 'deleteOwner']);
-        Route::get('restaurants',                       [AdminController::class, 'restaurants']);
-        Route::post('restaurants',                      [AdminController::class, 'createRestaurant']);
-        Route::patch('restaurants/{restaurant}/assign', [AdminController::class, 'assignOwner']);
-        Route::patch('restaurants/{restaurant}/cover',  [AdminController::class, 'updateCover']);
-        Route::patch('restaurants/{restaurant}',        [AdminController::class, 'updateRestaurant']);
-        Route::get('categories',                        [AdminController::class, 'categories']);
-        Route::get('stats',                             [AdminController::class, 'stats']);
+        Route::get('owners',                              [AdminController::class, 'owners']);
+        Route::post('owners',                             [AdminController::class, 'createOwner']);
+        Route::delete('owners/{user}',                    [AdminController::class, 'deleteOwner']);
+        Route::patch('owners/{user}/reset-password',      [AdminController::class, 'resetOwnerPassword']);
+        Route::get('restaurants/trashed',                 [AdminController::class, 'trashedRestaurants']);
+        Route::patch('restaurants/{id}/restore',          [AdminController::class, 'restoreRestaurant']);
+        Route::delete('restaurants/{id}/force',           [AdminController::class, 'forceDeleteRestaurant']);
+        Route::get('restaurants',                         [AdminController::class, 'restaurants']);
+        Route::post('restaurants',                        [AdminController::class, 'createRestaurant']);
+        Route::patch('restaurants/{restaurant}/assign',   [AdminController::class, 'assignOwner']);
+        Route::patch('restaurants/{restaurant}/cover',    [AdminController::class, 'updateCover']);
+        Route::patch('restaurants/{restaurant}',          [AdminController::class, 'updateRestaurant']);
+        Route::delete('restaurants/{restaurant}',         [AdminController::class, 'deleteRestaurant']);
+        Route::get('categories',                          [AdminController::class, 'categories']);
+        Route::get('stats',                               [AdminController::class, 'stats']);
     });
 });
 

@@ -62,7 +62,7 @@ class OwnerMenuController extends Controller
         return response()->json(new MenuItemResource($menuItem->fresh()));
     }
 
-    // Elimina un plato del menú permanentemente
+    // Elimina un plato del menú (soft delete — va a la papelera)
     public function destroy(Request $request, MenuItem $menuItem): JsonResponse
     {
         $this->authorizeRestaurant($request, $menuItem->restaurant);
@@ -70,6 +70,44 @@ class OwnerMenuController extends Controller
         $menuItem->delete();
 
         return response()->json(['message' => 'Plato eliminado correctamente.']);
+    }
+
+    // Lista los platos eliminados (papelera) del restaurante
+    public function trashed(Request $request, Restaurant $restaurant): JsonResponse
+    {
+        $this->authorizeRestaurant($request, $restaurant);
+
+        $items = MenuItem::onlyTrashed()
+            ->where('restaurant_id', $restaurant->id)
+            ->orderByDesc('deleted_at')
+            ->get();
+
+        return response()->json(['data' => MenuItemResource::collection($items)]);
+    }
+
+    // Restaura un plato eliminado
+    public function restore(Request $request, int $id): JsonResponse
+    {
+        $menuItem = MenuItem::onlyTrashed()->findOrFail($id);
+        $this->authorizeRestaurant($request, $menuItem->restaurant);
+
+        $menuItem->restore();
+
+        return response()->json([
+            'message' => 'Plato restaurado correctamente.',
+            'item'    => new MenuItemResource($menuItem->fresh()),
+        ]);
+    }
+
+    // Elimina permanentemente un plato de la papelera
+    public function forceDestroy(Request $request, int $id): JsonResponse
+    {
+        $menuItem = MenuItem::onlyTrashed()->findOrFail($id);
+        $this->authorizeRestaurant($request, $menuItem->restaurant);
+
+        $menuItem->forceDelete();
+
+        return response()->json(['message' => 'Plato eliminado permanentemente.']);
     }
 
     // Devuelve las reservas de un restaurante con soporte para filtrar por estado.

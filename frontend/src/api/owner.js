@@ -26,3 +26,12 @@ export const updateMenuItem = (itemId, data) =>
 
 export const deleteMenuItem = (itemId) =>
   api.delete(`/owner/menu-items/${itemId}`).then(r => r.data)
+
+export const getTrashedMenuItems = (restaurantId) =>
+  api.get(`/owner/restaurants/${restaurantId}/menu/trashed`).then(r => r.data)
+
+export const restoreMenuItem = (itemId) =>
+  api.patch(`/owner/menu-items/${itemId}/restore`).then(r => r.data)
+
+export const forceDeleteMenuItem = (itemId) =>
+  api.delete(`/owner/menu-items/${itemId}/force`).then(r => r.data)

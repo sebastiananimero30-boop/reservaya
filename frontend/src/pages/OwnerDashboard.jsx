@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { ChefHat, Eye, Loader2, Plus, Save, Trash2, Utensils, CalendarDays, Users, Clock, CheckCircle, XCircle, RefreshCw, BarChart2 } from 'lucide-react'
+import { ChefHat, Eye, Loader2, Plus, Save, Trash2, Utensils, CalendarDays, Users, Clock, CheckCircle, XCircle, RefreshCw, BarChart2, PackageX } from 'lucide-react'
 import toast from 'react-hot-toast'
 import clsx from 'clsx'
 import { useAuth } from '../hooks/useAuth'
@@ -15,6 +15,7 @@ import {
 } from '../api/owner'
 import OwnerStats from '../components/owner/OwnerStats'
 import ReservationScanner from '../components/owner/ReservationScanner'
+import TrashedMenuItems from '../components/owner/TrashedMenuItems'
 
 const EMPTY_FORM = { name: '', category: 'Principal', price: '', description: '', image_url: '', is_available: true }
 
@@ -187,6 +188,7 @@ export default function OwnerDashboard() {
           { id: 'menu',         label: 'Menú',         icon: ChefHat },
           { id: 'reservations', label: 'Reservas',     icon: CalendarDays },
           { id: 'stats',        label: 'Estadísticas', icon: BarChart2 },
+          { id: 'trashed',      label: 'Eliminados',   icon: PackageX },
         ].map(({ id, label, icon: Icon }) => (
           <button key={id} onClick={() => setActiveTab(id)}
             className={clsx('flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all',
@@ -423,6 +425,13 @@ export default function OwnerDashboard() {
                 restaurantId={selectedRestaurantId}
                 restaurantName={selectedRestaurant?.nombre}
               />
+            </section>
+          )}
+
+          {/* Tab: Eliminados */}
+          {activeTab === 'trashed' && (
+            <section>
+              <TrashedMenuItems restaurantId={selectedRestaurantId} />
             </section>
           )}
         </div>

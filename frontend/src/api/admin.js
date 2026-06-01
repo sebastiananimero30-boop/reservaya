@@ -32,3 +32,20 @@ export const getAdminCategories = () =>
 
 export const getAdminStats = () =>
   api.get('/admin/stats').then(r => r.data)
+
+// ── Papelera de restaurantes ──────────────────────────────────────────────────
+export const getTrashedRestaurants = () =>
+  api.get('/admin/restaurants/trashed').then(r => r.data)
+
+export const restoreRestaurant = (id) =>
+  api.patch(`/admin/restaurants/${id}/restore`).then(r => r.data)
+
+export const forceDeleteRestaurant = (id) =>
+  api.delete(`/admin/restaurants/${id}/force`).then(r => r.data)
+
+export const deleteRestaurant = (id) =>
+  api.delete(`/admin/restaurants/${id}`).then(r => r.data)
+
+// ── Contraseña de propietario ─────────────────────────────────────────────────
+export const resetOwnerPassword = (id, password = null) =>
+  api.patch(`/admin/owners/${id}/reset-password`, password ? { password } : {}).then(r => r.data)

@@ -311,6 +311,82 @@ class AdminController extends Controller
         ]);
     }
 
+    // Lista restaurantes eliminados (papelera)
+    public function trashedRestaurants(Request $request): JsonResponse
+    {
+        $this->ensureAdmin($request);
+
+        $restaurants = Restaurant::onlyTrashed()
+            ->with(['category', 'photos'])
+            ->orderByDesc('deleted_at')
+            ->get();
+
+        return response()->json([
+            'data' => RestaurantResource::collection($restaurants),
+        ]);
+    }
+
+    // Restaura un restaurante eliminado
+    public function restoreRestaurant(Request $request, int $id): JsonResponse
+    {
+        $this->ensureAdmin($request);
+
+        $restaurant = Restaurant::onlyTrashed()->findOrFail($id);
+        $restaurant->restore();
+        $restaurant->load(['category', 'photos']);
+
+        return response()->json([
+            'message'    => 'Restaurante restaurado correctamente.',
+            'restaurant' => new RestaurantResource($restaurant),
+        ]);
+    }
+
+    // Elimina permanentemente un restaurante de la papelera
+    public function forceDeleteRestaurant(Request $request, int $id): JsonResponse
+    {
+        $this->ensureAdmin($request);
+
+        $restaurant = Restaurant::onlyTrashed()->findOrFail($id);
+        $restaurant->forceDelete();
+
+        return response()->json(['message' => 'Restaurante eliminado permanentemente.']);
+    }
+
+    // Elimina un restaurante (soft delete)
+    public function deleteRestaurant(Request $request, Restaurant $restaurant): JsonResponse
+    {
+        $this->ensureAdmin($request);
+
+        $restaurant->delete();
+
+        return response()->json(['message' => 'Restaurante eliminado correctamente.']);
+    }
+
+    // Cambia la contraseña de un propietario
+    public function resetOwnerPassword(Request $request, User $user): JsonResponse
+    {
+        $this->ensureAdmin($request);
+
+        if (! $user->isOwner()) {
+            abort(422, 'El usuario no es un propietario.');
+        }
+
+        $data = $request->validate([
+            'password' => 'nullable|string|min:8',
+        ]);
+
+        // Si no mandan contraseña, generar una automáticamente
+        $plainPassword = $data['password'] ?? Str::password(12, letters: true, numbers: true, symbols: false);
+
+        $user->update(['password' => Hash::make($plainPassword)]);
+        $user->tokens()->delete(); // Revocar sesiones activas
+
+        return response()->json([
+            'message'  => 'Contraseña actualizada. El propietario deberá iniciar sesión de nuevo.',
+            'password' => $plainPassword,
+        ]);
+    }
+
     // Edita los datos de un restaurante existente
     public function updateRestaurant(Request $request, Restaurant $restaurant): JsonResponse
     {

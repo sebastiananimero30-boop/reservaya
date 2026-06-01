@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Users, Store, Plus, Trash2, Copy, Check, Eye, EyeOff,
-  Loader2, ShieldCheck, X, ChevronDown, Building2, ImagePlus, BarChart2, Pencil
+  Loader2, ShieldCheck, X, ChevronDown, Building2, ImagePlus, BarChart2, Pencil, Wrench
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Link } from 'react-router-dom'
@@ -17,11 +17,14 @@ import {
 } from '../api/admin'
 import { adaptRestaurant } from '../api/adapters'
 import AdminStats from '../components/admin/AdminStats'
+import TrashedRestaurants from '../components/admin/TrashedRestaurants'
+import ResetOwnerPassword from '../components/admin/ResetOwnerPassword'
 
 const TABS = [
   { id: 'owners',      label: 'Propietarios', icon: Users },
   { id: 'restaurants', label: 'Restaurantes', icon: Store },
   { id: 'stats',       label: 'Estadísticas', icon: BarChart2 },
+  { id: 'tools',       label: 'Herramientas', icon: Wrench },
 ]
 
 function Modal({ open, onClose, title, children }) {
@@ -644,6 +647,17 @@ export default function AdminDashboard() {
           {tab === 'owners'      && <OwnersTab />}
           {tab === 'restaurants' && <RestaurantsTab />}
           {tab === 'stats'       && <AdminStats />}
+          {tab === 'tools'       && (
+            <div className="space-y-6">
+              <TrashedRestaurants />
+              <ResetOwnerPassword />
+            </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  )
+}
         </motion.div>
       </AnimatePresence>
     </div>
