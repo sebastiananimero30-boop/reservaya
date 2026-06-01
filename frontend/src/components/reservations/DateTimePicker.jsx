@@ -16,7 +16,6 @@ export default function DateTimePicker({ value, onChange }) {
 
   const handleDateChange = (e) => {
     const newDate = e.target.value
-    // Si cambia a hoy y la hora ya pasó, limpiar la hora
     if (newDate === today && value.time) {
       const [h, m] = value.time.split(':').map(Number)
       if ((h * 60 + m) <= currentMinutes) {
@@ -27,14 +26,9 @@ export default function DateTimePicker({ value, onChange }) {
     onChange({ ...value, date: newDate })
   }
 
-  // Calcular min/max para el input de hora si es hoy
-  const minTime = value.date === today
-    ? (() => {
-        const h = String(now.getHours()).padStart(2, '0')
-        const m = String(now.getMinutes()).padStart(2, '0')
-        return `${h}:${m}`
-      })()
-    : '00:00'
+  const isPastTime = value.date === today && value.time
+    ? (() => { const [h, m] = value.time.split(':').map(Number); return (h * 60 + m) <= currentMinutes })()
+    : false
 
   return (
     <div className="bg-stone-50 dark:bg-stone-700/50 rounded-2xl p-4 space-y-4">
@@ -52,23 +46,21 @@ export default function DateTimePicker({ value, onChange }) {
         />
       </div>
 
-      {/* Hora */}
+      {/* Hora libre */}
       <div>
         <label className="flex items-center gap-2 text-sm font-medium text-stone-700 dark:text-stone-300 mb-2">
           <Clock className="w-4 h-4 text-primary-500" /> Hora
         </label>
         <input
           type="time"
-          min={minTime}
           value={value.time}
           onChange={handleTimeChange}
-          className="input-base text-sm"
-          placeholder="HH:MM"
+          className={clsx(
+            'input-base text-sm',
+            isPastTime && 'border-red-400 focus:ring-red-400'
+          )}
         />
-        {value.date === today && value.time && (() => {
-          const [h, m] = value.time.split(':').map(Number)
-          return (h * 60 + m) <= currentMinutes
-        })() && (
+        {isPastTime && (
           <p className="text-xs text-red-500 mt-1">⚠️ Esa hora ya pasó, elige una hora futura.</p>
         )}
       </div>

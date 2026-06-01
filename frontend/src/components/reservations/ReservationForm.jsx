@@ -131,7 +131,7 @@ export default function ReservationForm({ restaurant }) {
           ) : availableTables.length === 0 ? (
             <div className="flex items-center gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-3 text-sm text-red-600 dark:text-red-400">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
-              Esa hora no está disponible. Prueba con otra hora o fecha.
+              <span>⛔ Esa hora no está disponible. Todas las mesas están ocupadas, prueba con otra hora.</span>
             </div>
           ) : (
             <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-3 text-sm text-green-700 dark:text-green-400">
