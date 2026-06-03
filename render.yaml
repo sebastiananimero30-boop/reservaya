@@ -74,8 +74,16 @@ services:
       - key: VITE_GOOGLE_CLIENT_ID
         sync: false
       - key: MAIL_MAILER
-        value: resend
-      - key: RESEND_KEY
+        value: smtp
+      - key: MAIL_HOST
+        value: smtp.gmail.com
+      - key: MAIL_PORT
+        value: 465
+      - key: MAIL_ENCRYPTION
+        value: ssl
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
         sync: false
       - key: MAIL_FROM_ADDRESS
         sync: false
