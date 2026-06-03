@@ -6,8 +6,14 @@ export const getOwnerRestaurants = () =>
 export const getOwnerMenu = (restaurantId) =>
   api.get(`/owner/restaurants/${restaurantId}/menu`).then(r => r.data)
 
-export const getOwnerReservations = (restaurantId, status = '') =>
-  api.get(`/owner/restaurants/${restaurantId}/reservations`, { params: status ? { status } : {} }).then(r => r.data)
+export const getOwnerReservations = (restaurantId, filters = {}) => {
+  const params = {}
+  if (filters.status)     params.status     = filters.status
+  if (filters.dateFrom)   params.date_from  = filters.dateFrom
+  if (filters.dateTo)     params.date_to    = filters.dateTo
+  if (filters.dateField)  params.date_field = filters.dateField
+  return api.get(`/owner/restaurants/${restaurantId}/reservations`, { params }).then(r => r.data)
+}
 
 export const updateReservationStatus = (reservationId, status) =>
   api.patch(`/owner/reservations/${reservationId}/status`, { status }).then(r => r.data)

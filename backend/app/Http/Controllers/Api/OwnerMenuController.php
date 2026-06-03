@@ -116,7 +116,10 @@ class OwnerMenuController extends Controller
     {
         $this->authorizeRestaurant($request, $restaurant);
 
-        $status = $request->get('status');
+        $status    = $request->get('status');
+        $dateFrom  = $request->get('date_from');
+        $dateTo    = $request->get('date_to');
+        $dateField = $request->get('date_field', 'start_time'); // start_time o created_at
 
         $query = \App\Models\Reservation::with(['user', 'table'])
             ->where('restaurant_id', $restaurant->id)
@@ -124,6 +127,14 @@ class OwnerMenuController extends Controller
 
         if ($status) {
             $query->where('status', $status);
+        }
+
+        if ($dateFrom) {
+            $query->whereDate($dateField, '>=', $dateFrom);
+        }
+
+        if ($dateTo) {
+            $query->whereDate($dateField, '<=', $dateTo);
         }
 
         $reservations = $query->paginate(20);
@@ -136,6 +147,7 @@ class OwnerMenuController extends Controller
                 'table'       => $r->table->name ?? "Mesa #{$r->table_id}",
                 'guests'      => $r->guests,
                 'start_time'  => $r->start_time?->toIso8601String(),
+                'created_at'  => $r->created_at?->toIso8601String(),
                 'status'      => $r->status,
                 'notes'       => $r->notes,
             ]),

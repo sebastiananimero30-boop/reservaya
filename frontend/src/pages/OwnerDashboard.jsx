@@ -36,6 +36,9 @@ export default function OwnerDashboard() {
   const [form, setForm] = useState(EMPTY_FORM)
   const [activeTab, setActiveTab] = useState('menu')
   const [resFilter, setResFilter] = useState('')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [dateField, setDateField] = useState('start_time')
   const [scanResult, setScanResult] = useState(null)
 
   const isOwner = user?.role === 'owner'
@@ -68,8 +71,13 @@ export default function OwnerDashboard() {
   const menuItems = menuQuery.data ?? []
 
   const reservationsQuery = useQuery({
-    queryKey: ['owner-reservations', selectedRestaurantId, resFilter],
-    queryFn: () => getOwnerReservations(selectedRestaurantId, resFilter).then(r => r.data ?? []),
+    queryKey: ['owner-reservations', selectedRestaurantId, resFilter, dateFrom, dateTo, dateField],
+    queryFn: () => getOwnerReservations(selectedRestaurantId, {
+      status: resFilter,
+      dateFrom,
+      dateTo,
+      dateField,
+    }).then(r => r.data ?? []),
     enabled: !!(isOwner && selectedRestaurantId && activeTab === 'reservations'),
   })
   const reservations = reservationsQuery.data ?? []
@@ -328,6 +336,20 @@ export default function OwnerDashboard() {
                     <option value="cancelled">Canceladas</option>
                     <option value="no_show">No se presentaron</option>
                   </select>
+                  <select value={dateField} onChange={e => setDateField(e.target.value)} className="input-base text-sm py-1.5">
+                    <option value="start_time">Por fecha de reserva</option>
+                    <option value="created_at">Por fecha de creacion</option>
+                  </select>
+                  <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
+                    className="input-base text-sm py-1.5" title="Desde" />
+                  <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
+                    className="input-base text-sm py-1.5" title="Hasta" />
+                  {(dateFrom || dateTo) && (
+                    <button onClick={() => { setDateFrom(''); setDateTo('') }}
+                      className="text-xs text-stone-400 hover:text-red-500 transition-colors">
+                      Limpiar
+                    </button>
+                  )}
                   <button onClick={() => reservationsQuery.refetch()} disabled={reservationsQuery.isFetching}
                     className="btn-outline p-2" aria-label="Actualizar">
                     <RefreshCw className={clsx('w-4 h-4', reservationsQuery.isFetching && 'animate-spin')} />
