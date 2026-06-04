@@ -45,6 +45,13 @@ export default function ReservationForm({ restaurant }) {
   const requiresDeposit = STRIPE_ENABLED
   const reservationBlocked = requiresDeposit && !payWithStripe
 
+  // Verificar si la hora seleccionada ya pasó
+  const isPastDateTime = () => {
+    if (!datetime.date || !datetime.time) return false
+    const selected = new Date(`${datetime.date}T${datetime.time}:00`)
+    return selected <= new Date()
+  }
+
   useEffect(() => {
     setSelectedTable(null)
   }, [datetime.date, datetime.time, datetime.guests])
@@ -88,6 +95,7 @@ export default function ReservationForm({ restaurant }) {
 
   const onSubmit = (data) => {
     if (!user) { toast.error('Inicia sesión para reservar'); navigate('/login'); return }
+    if (isPastDateTime()) { toast.error('La hora seleccionada ya pasó'); return }
     if (!selectedTable) { toast.error('Selecciona una mesa'); return }
     if (reservationBlocked) { toast.error('Selecciona garantizar con deposito para reservar'); return }
 
@@ -119,6 +127,14 @@ export default function ReservationForm({ restaurant }) {
     <>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <DateTimePicker value={datetime} onChange={setDatetime} />
+
+        {/* Aviso hora pasada */}
+        {isPastDateTime() && (
+          <div className="flex items-center gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-3 text-sm text-red-600 dark:text-red-400">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            La hora seleccionada ya paso. Elige una hora futura.
+          </div>
+        )}
 
         {/* Disponibilidad de la hora seleccionada */}
         <div>
@@ -206,7 +222,7 @@ export default function ReservationForm({ restaurant }) {
           </div>
         )}
 
-        <button type="submit" disabled={mutation.isPending || reservationBlocked}
+        <button type="submit" disabled={mutation.isPending || reservationBlocked || isPastDateTime()}
           className="btn-primary w-full flex items-center justify-center gap-2 py-3 disabled:opacity-50 disabled:cursor-not-allowed">
           {mutation.isPending ? (
             <><Loader2 className="w-4 h-4 animate-spin" /> Confirmando...</>
