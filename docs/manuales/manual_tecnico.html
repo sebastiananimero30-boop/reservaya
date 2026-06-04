@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Manual Técnico — ReservaYa</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', sans-serif; background: #f8f7f4; color: #1c1917; line-height: 1.7; }
+  .cover { background: linear-gradient(135deg, #f97316, #ea580c); color: white; padding: 80px 60px; }
+  .cover h1 { font-size: 3rem; font-weight: 800; margin-bottom: 8px; }
+  .cover p { font-size: 1.2rem; opacity: 0.9; }
+  .cover .badge { display: inline-block; background: rgba(255,255,255,0.2); padding: 4px 14px; border-radius: 20px; font-size: 0.85rem; margin-top: 16px; }
+  .toc { background: white; padding: 40px 60px; border-bottom: 1px solid #e7e5e4; }
+  .toc h2 { font-size: 1.3rem; color: #f97316; margin-bottom: 20px; }
+  .toc ol { padding-left: 20px; }
+  .toc li { margin: 6px 0; }
+  .toc a { color: #44403c; text-decoration: none; }
+  .toc a:hover { color: #f97316; }
+  .container { max-width: 960px; margin: 0 auto; padding: 40px 60px; }
+  h2 { font-size: 1.8rem; font-weight: 700; color: #f97316; margin: 48px 0 16px; padding-top: 48px; border-top: 2px solid #fed7aa; }
+  h3 { font-size: 1.2rem; font-weight: 700; color: #292524; margin: 28px 0 10px; }
+  h4 { font-size: 1rem; font-weight: 700; color: #57534e; margin: 18px 0 8px; }
+  p { margin-bottom: 12px; color: #44403c; }
+  ul, ol { padding-left: 22px; margin-bottom: 12px; }
+  li { margin: 4px 0; color: #44403c; }
+  code { background: #fef3c7; color: #92400e; padding: 2px 7px; border-radius: 4px; font-size: 0.88em; font-family: 'Courier New', monospace; }
+  pre { background: #1c1917; color: #fef3c7; padding: 20px 24px; border-radius: 12px; overflow-x: auto; margin: 16px 0; font-family: 'Courier New', monospace; font-size: 0.88em; line-height: 1.6; }
+  pre code { background: none; color: inherit; padding: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.9em; }
+  th { background: #f97316; color: white; padding: 10px 14px; text-align: left; }
+  td { padding: 9px 14px; border-bottom: 1px solid #e7e5e4; }
+  tr:nth-child(even) td { background: #fafaf9; }
+  .card { background: white; border: 1px solid #e7e5e4; border-radius: 12px; padding: 20px 24px; margin: 16px 0; }
+  .card h4 { margin-top: 0; color: #f97316; }
+  .badge-green { background: #dcfce7; color: #166534; padding: 2px 10px; border-radius: 20px; font-size: 0.8em; font-weight: 600; }
+  .badge-blue { background: #dbeafe; color: #1e40af; padding: 2px 10px; border-radius: 20px; font-size: 0.8em; font-weight: 600; }
+  .badge-orange { background: #fed7aa; color: #9a3412; padding: 2px 10px; border-radius: 20px; font-size: 0.8em; font-weight: 600; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .info-box { background: #fffbeb; border-left: 4px solid #f97316; padding: 14px 18px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+  .info-box p { margin: 0; font-size: 0.92em; }
+  footer { background: #1c1917; color: #a8a29e; text-align: center; padding: 30px; margin-top: 60px; font-size: 0.88em; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <h1>Manual Técnico</h1>
+  <p>ReservaYa — Plataforma de Reservas de Restaurantes</p>
+  <div class="badge">Versión 1.0 · Junio 2026</div>
+</div>
+
+<div class="toc">
+  <h2>Tabla de Contenidos</h2>
+  <ol>
+    <li><a href="#s1">Descripción General del Sistema</a></li>
+    <li><a href="#s2">Arquitectura del Software</a></li>
+    <li><a href="#s3">Estructura del Código</a></li>
+    <li><a href="#s4">Backend — Laravel 11</a></li>
+    <li><a href="#s5">Frontend — React + Vite</a></li>
+    <li><a href="#s6">Base de Datos</a></li>
+    <li><a href="#s7">Autenticación y Roles</a></li>
+    <li><a href="#s8">Integraciones Externas</a></li>
+    <li><a href="#s9">Despliegue en Producción</a></li>
+    <li><a href="#s10">Variables de Entorno</a></li>
+    <li><a href="#s11">API REST — Endpoints</a></li>
+    <li><a href="#s12">Flujos Principales del Sistema</a></li>
+    <li><a href="#s13">CI/CD y Control de Calidad</a></li>
+    <li><a href="#s14">Solución de Problemas Comunes</a></li>
+  </ol>
+</div>
+
+<div class="container">
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="s1">1. Descripción General del Sistema</h2>
+
+<p>ReservaYa es una plataforma web full-stack para la gestión de reservas en restaurantes. Permite a clientes buscar restaurantes, ver disponibilidad en tiempo real y hacer reservas con pago de depósito. Los propietarios gestionan su restaurante desde un panel propio y los administradores controlan toda la plataforma.</p>
+
+<div class="grid2">
+  <div class="card">
+    <h4>URL Producción</h4>
+    <p><code>https://reservaya-3cbw.onrender.com</code></p>
+  </div>
+  <div class="card">
+    <h4>Repositorio</h4>
+    <p><code>github.com/sebastiananimero30-boop/reservaya</code></p>
+  </div>
+</div>
+
+<h3>Stack Tecnológico</h3>
+<table>
+  <tr><th>Capa</th><th>Tecnología</th><th>Versión</th></tr>
+  <tr><td>Backend</td><td>Laravel (PHP)</td><td>11.x</td></tr>
+  <tr><td>Frontend</td><td>React + Vite</td><td>18.x / 5.x</td></tr>
+  <tr><td>Base de datos (local)</td><td>SQLite</td><td>3.x</td></tr>
+  <tr><td>Base de datos (producción)</td><td>PostgreSQL</td><td>15.x</td></tr>
+  <tr><td>Autenticación</td><td>Laravel Sanctum</td><td>4.x</td></tr>
+  <tr><td>Pagos</td><td>Stripe</td><td>API v1</td></tr>
+  <tr><td>Imágenes</td><td>Cloudinary</td><td>API v1</td></tr>
+  <tr><td>Correo</td><td>Gmail SMTP / Resend</td><td>—</td></tr>
+  <tr><td>Mapas</td><td>Google Maps API</td><td>—</td></tr>
+  <tr><td>Despliegue</td><td>Render (Docker)</td><td>—</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="s2">2. Arquitectura del Software</h2>
+
+<pre><code>┌─────────────────────────────────────────────────────────────┐
+│                        CLIENTE (Browser)                     │
+│              React SPA + TanStack Query + Vite               │
+└──────────────────────────┬──────────────────────────────────┘
+                           │ HTTPS (JSON / REST)
+┌──────────────────────────▼──────────────────────────────────┐
+│                    RENDER (Docker Container)                 │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │  Nginx (puerto 80)                                     │ │
+│  │   ├── /          → archivos estáticos del frontend     │ │
+│  │   └── /api/*     → proxy → Laravel (puerto 8000)       │ │
+│  └────────────────────────────────────────────────────────┘ │
+│  ┌────────────────────────────────────────────────────────┐ │
+│  │  Laravel 11 (PHP-FPM / artisan serve)                  │ │
+│  │   ├── Sanctum (autenticación por tokens)               │ │
+│  │   ├── Eloquent ORM                                     │ │
+│  │   └── Queues sincrónicas (correos en el mismo proceso) │ │
+│  └────────────────────────────────────────────────────────┘ │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+           ┌───────────────▼───────────────┐
+           │  PostgreSQL (Render Database)  │
+           └───────────────────────────────┘
+
+Servicios externos:
+  ├── Stripe API       → pagos con tarjeta
+  ├── Gmail SMTP       → correos de confirmación
+  ├── Cloudinary API   → almacenamiento de imágenes
+  ├── Google OAuth     → login social
+  └── Google Maps API  → mapas embebidos</code></pre>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="s3">3. Estructura del Código</h2>
+
+<h3>Raíz del Proyecto</h3>
+<pre><code>reservaya-complete/
+├── backend/          # API Laravel
+├── frontend/         # SPA React
+├── docs/             # Manuales y documentación
+├── postman/          # Colección de pruebas API
+├── tools/            # Scripts PowerShell de documentación
+├── Dockerfile        # Imagen Docker multi-stage
+├── docker-compose.yml
+├── render.yaml       # Configuración de Render
+└── sonar-project.properties</code></pre>
+
+<h3>Backend — Laravel</h3>
+<pre><code>backend/
+├── app/
+│   ├── Http/
+│   │   ├── Controllers/Api/
+│   │   │   ├── AdminController.php       # CRUD admin
+│   │   │   ├── AuthController.php        # Login / registro
+│   │   │   ├── CategoryController.php    # Categorías
+│   │   │   ├── GoogleAuthController.php  # OAuth Google
+│   │   │   ├── OwnerMenuController.php   # Panel propietario
+│   │   │   ├── PaymentController.php     # Pagos Stripe
+│   │   │   ├── ReservationController.php # Reservas
+│   │   │   ├── RestaurantController.php  # Restaurantes públicos
+│   │   │   ├── ReviewController.php      # Reseñas
+│   │   │   └── StripePaymentController.php
+│   │   ├── Middleware/
+│   │   │   └── CorsMiddleware.php
+│   │   └── Resources/                   # Transformadores JSON
+│   ├── Models/
+│   │   ├── Category.php
+│   │   ├── MenuItem.php      # SoftDeletes
+│   │   ├── Reservation.php
+│   │   ├── Restaurant.php    # SoftDeletes
+│   │   ├── RestaurantPhoto.php
+│   │   ├── Review.php
+│   │   ├── Schedule.php
+│   │   ├── Table.php
+│   │   └── User.php
+│   ├── Mail/
+│   │   ├── ReservationConfirmed.php
+│   │   └── OwnerNewReservation.php
+│   ├── Services/
+│   │   └── StripeCheckoutService.php
+│   └── Helpers/
+│       └── ReservationHelper.php
+├── database/
+│   ├── migrations/             # Esquema de la BD
+│   ├── factories/              # Datos de prueba
+│   └── seeders/
+│       └── DatabaseSeeder.php  # Datos iniciales
+├── routes/
+│   └── api.php                 # Todas las rutas API
+└── config/
+    ├── cors.php
+    └── services.php</code></pre>
+
+<h3>Frontend — React</h3>
+<pre><code>frontend/src/
+├── api/
+│   ├── axios.js          # Cliente HTTP base (interceptores)
+│   ├── adapters.js       # Transformar snake_case → camelCase
+│   ├── admin.js          # Funciones API del administrador
+│   ├── auth.js           # Login, registro, Google OAuth
+│   ├── owner.js          # Funciones API del propietario
+│   ├── reservations.js   # Crear y gestionar reservas
+│   └── restaurants.js    # Buscar y listar restaurantes
+├── components/
+│   ├── admin/            # TrashedRestaurants, ResetOwnerPassword, AdminStats
+│   ├── common/           # Spinner, ImageUploader, Navbar, Footer
+│   ├── owner/            # OwnerStats, ReservationScanner, TrashedMenuItems
+│   ├── reservations/     # DateTimePicker, ReservationForm, StripePaymentModal
+│   └── restaurants/      # RestaurantCard, ReviewForm, MenuSection
+├── hooks/
+│   ├── useAuth.js        # Estado global de autenticación
+│   └── useRestaurants.js # Queries de restaurantes y disponibilidad
+├── pages/
+│   ├── Home.jsx
+│   ├── Login.jsx / Register.jsx
+│   ├── RestaurantDetail.jsx
+│   ├── MyReservations.jsx
+│   ├── OwnerDashboard.jsx
+│   └── AdminDashboard.jsx
+└── main.jsx              # TanStack Query config, Router, Providers</code></pre>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="s4">4. Backend — Laravel 11</h2>
+
+<h3>Patrón de Arquitectura</h3>
+<p>El backend sigue el patrón <strong>MVC + Resources</strong>. Los controladores reciben la petición, validan los datos, interactúan con los modelos Eloquent y devuelven respuestas usando API Resources para transformar el JSON.</p>
+
+<h3>Modelos y Relaciones</h3>
+<div class="card">
+  <h4>User</h4>
+  <p>Roles: <code>client</code>, <code>owner</code>, <code>admin</code>. Métodos helper: <code>isAdmin()</code>, <code>isOwner()</code>. Relaciones: <code>hasMany(Restaurant)</code>, <code>hasMany(Reservation)</code>.</p>
+</div>
+<div class="card">
+  <h4>Restaurant</h4>
+  <p>Usa <code>SoftDeletes</code>. Relaciones: <code>belongsTo(Category)</code>, <code>belongsTo(User owner)</code>, <code>hasMany(Table)</code>, <code>hasMany(Reservation)</code>, <code>hasMany(Review)</code>, <code>hasMany(Schedule)</code>, <code>hasMany(RestaurantPhoto)</code>.</p>
+</div>
+<div class="card">
+  <h4>Reservation</h4>
+  <p>Estados: <code>pending</code>, <code>confirmed</code>, <code>completed</code>, <code>cancelled</code>, <code>no_show</code>. Campos clave: <code>start_time</code>, <code>duration_minutes</code> (90 min), <code>payment_intent_id</code>, <code>deposit_refunded</code>.</p>
+</div>
+<div class="card">
+  <h4>MenuItem</h4>
+  <p>Usa <code>SoftDeletes</code>. Campos: <code>name</code>, <code>category</code>, <code>price</code>, <code>image_url</code>, <code>is_available</code>.</p>
+</div>
+
+<h3>Lógica de Disponibilidad</h3>
+<pre><code>// ReservationHelper.php
+// Una reserva dura 90 minutos. Se considera conflicto si:
+// el inicio de la nueva reserva cae dentro del bloque de una existente
+// (±90 minutos del start_time)
+
+public static function hasConflict(int $tableId, Carbon $start): bool
+{
+    $end = $start->copy()->addMinutes(90);
+
+    return Reservation::where('table_id', $tableId)
+        ->whereIn('status', ['confirmed', 'pending'])
+        ->where(function ($q) use ($start, $end) {
+            $q->whereBetween('start_time', [$start->subMinutes(89), $end])
+              ->orWhereBetween(DB::raw("start_time + interval '90 minutes'"), [$start, $end]);
+        })->exists();
+}</code></pre>
+
+<h3>Soft Deletes</h3>
+<p>Los modelos <code>Restaurant</code> y <code>MenuItem</code> usan el trait <code>SoftDeletes</code>. Al eliminar, se registra la fecha en <code>deleted_at</code> sin borrar el registro. Se pueden restaurar o eliminar permanentemente desde el panel de administración.</p>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="s5">5. Frontend — React + Vite</h2>
+
+<h3>Gestión de Estado</h3>
+<p>Se usa <strong>TanStack Query v5</strong> como único gestor de estado del servidor. No hay Redux ni Context para datos remotos. La configuración global está en <code>main.jsx</code>:</p>
+<pre><code>const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 30,           // 30 segundos frescos
+      refetchInterval: 1000 * 30,     // Auto-refresh cada 30s
+      refetchIntervalInBackground: false,
+      retry: 1,
+    }
+  }
+})</code></pre>
+
+<h3>Adaptadores</h3>
+<p>El backend devuelve campos en <code>snake_case</code> y el frontend los consume en <code>camelCase</code> con nombres en español. El archivo <code>adapters.js</code> hace esa transformación:</p>
+<pre><code>// adapters.js
+export function adaptRestaurant(r) {
+  return {
+    id: r.id,
+    nombre: r.name,
+    descripcion: r.description,
+    direccion: r.address,
+    zona: r.zone,
+    foto_portada: r.cover_photo,
+    mesas: r.tables?.map(adaptTable),
+    // ...
+  }
+}</code></pre>
+
+<h3>Interceptor Axios</h3>
+<p>El cliente HTTP agrega automáticamente el token de autenticación a cada petición:</p>
+<pre><code>// axios.js
+api.interceptors.request.use(config => {
+  const token = localStorage.getItem('token')
+  if (token) config.headers.Authorization = `Bearer ${token}`
+  return config
+})</code></pre>
+
+<h3>PWA (Progressive Web App)</h3>
+<p>Configurado con <code>vite-plugin-pwa</code>. Los usuarios pueden instalar ReservaYa como app nativa en escritorio y móvil. Iconos en <code>public/pwa-192x192.svg</code> y <code>public/pwa-512x512.svg</code>.</p>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="s6">6. Base de Datos</h2>
+
+<h3>Diagrama de Tablas</h3>
+<pre><code>users
+  id, name, email, password, role, phone, avatar, google_id
+
+categories
+  id, name, icon, slug
+
+restaurants
+  id, name, description, address, zone, phone, latitude, longitude,
+  capacity, rating, is_active, cover_photo, category_id, owner_id,
+  deleted_at (SoftDelete)
+
+restaurant_photos
+  id, restaurant_id, url, is_cover, sort_order
+
+schedules
+  id, restaurant_id, day_of_week (0=Dom…6=Sáb), open_time, close_time, is_closed
+
+tables
+  id, restaurant_id, name, seats, price, is_active
+
+reservations
+  id, user_id, restaurant_id, table_id, start_time, duration_minutes,
+  guests, status, notes, payment_provider, payment_status,
+  payment_intent_id, deposit_refunded, qr_code
+
+menu_items
+  id, restaurant_id, name, category, price, description,
+  image_url, is_available, deleted_at (SoftDelete)
+
+reviews
+  id, user_id, restaurant_id, rating, comment</code></pre>
+
+<h3>Migraciones Importantes</h3>
+<table>
+  <tr><th>Archivo</th><th>Descripción</th></tr>
+  <tr><td><code>0001_01_01_000000_create_users_table</code></td><td>Tabla base de usuarios</td></tr>
+  <tr><td><code>2024_01_01_000001_create_categories_table</code></td><td>Categorías de restaurantes</td></tr>
+  <tr><td><code>2026_06_01_000001_add_soft_deletes_to_menu_items</code></td><td>Papelera de productos</td></tr>
+  <tr><td><code>2026_06_01_000002_add_soft_deletes_to_restaurants</code></td><td>Papelera de restaurantes</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="s7">7. Autenticación y Roles</h2>
+
+<h3>Flujo de Autenticación</h3>
+<pre><code>1. POST /api/auth/login  →  { email, password }
+2. Laravel valida con Sanctum
+3. Devuelve { token, user }
+4. Frontend guarda token en localStorage
+5. Cada petición incluye: Authorization: Bearer {token}
+6. Middleware auth:sanctum verifica el token</code></pre>
+
+<h3>Google OAuth</h3>
+<pre><code>1. Usuario hace clic en "Continuar con Google"
+2. Frontend redirige a Google con el Client ID
+3. Google devuelve credential (JWT)
+4. POST /api/auth/google  →  { credential }
+5. Backend verifica el JWT con Google
+6. Crea o actualiza el usuario con google_id
+7. Devuelve token de Sanctum</code></pre>
+
+<h3>Roles y Permisos</h3>
+<table>
+  <tr><th>Rol</th><th>Acceso</th><th>Credenciales demo</th></tr>
+  <tr><td><span class="badge-blue">client</span></td><td>Buscar, reservar, reseñar</td><td>client@test.app / client123</td></tr>
+  <tr><td><span class="badge-green">owner</span></td><td>Panel propietario (menú, reservas, stats)</td><td>owner@pizzeria.com / owner123</td></tr>
+  <tr><td><span class="badge-orange">admin</span></td><td>Control total de la plataforma</td><td>admin@reservaya.app / admin123</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="s8">8. Integraciones Externas</h2>
+
+<h3>Stripe — Pagos</h3>
+<p>Se usa <strong>Stripe Checkout Session</strong> para el depósito de reserva ($5 USD). El flujo es:</p>
+<ol>
+  <li>Frontend crea la reserva en estado <code>pending</code></li>
+  <li>Backend crea una sesión de Stripe y devuelve <code>checkout_url</code></li>
+  <li>Usuario paga en la página de Stripe</li>
+  <li>Stripe llama al webhook <code>POST /api/payments/confirm-reservation</code></li>
+  <li>Backend confirma la reserva y envía el correo</li>
+</ol>
+<p>Si se cancela la reserva, el reembolso es automático vía <code>PaymentIntent::cancel()</code> o <code>Refund::create()</code>.</p>
+
+<h3>Cloudinary — Imágenes</h3>
+<p>Las imágenes se suben directamente desde el frontend usando el widget de Cloudinary. Se guarda solo la URL en la base de datos. Variables requeridas: <code>VITE_CLOUDINARY_CLOUD_NAME</code>, <code>VITE_CLOUDINARY_UPLOAD_PRESET</code>.</p>
+
+<h3>Gmail SMTP — Correos</h3>
+<p>Se envían dos correos en cada reserva confirmada:</p>
+<ul>
+  <li><strong>Al cliente:</strong> <code>ReservationConfirmed.php</code> — incluye datos de la reserva y código QR</li>
+  <li><strong>Al propietario:</strong> <code>OwnerNewReservation.php</code> — datos del cliente y mesa</li>
+</ul>
+<p>Configuración: puerto 465 (SSL), host <code>smtp.gmail.com</code>, usando App Password de Gmail.</p>
+
+<h3>QR — Validación de Llegada</h3>
+<p>Al crear la reserva se genera un código único (<code>RYA-000001</code>) guardado en <code>qr_code</code>. El propietario escanea el QR desde su panel usando la cámara, el sistema valida el código y puede marcar la reserva como <code>completed</code>.</p>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="s9">9. Despliegue en Producción</h2>
+
+<h3>Dockerfile (Multi-stage)</h3>
+<pre><code># Stage 1: Build frontend
+FROM node:20-alpine AS frontend_builder
+WORKDIR /app
+COPY frontend/ .
+ARG VITE_API_URL VITE_STRIPE_KEY VITE_GOOGLE_CLIENT_ID ...
+RUN npm ci && npm run build
+
+# Stage 2: Build backend
+FROM php:8.3-fpm-alpine AS backend_builder
+COPY backend/ .
+RUN composer install --no-dev --optimize-autoloader
+
+# Stage 3: Final image
+FROM php:8.3-fpm-alpine
+# Copia frontend compilado → /var/www/html/public
+# Copia backend → /var/www/html
+# Nginx sirve /public y proxea /api/ → Laravel</code></pre>
+
+<h3>render.yaml</h3>
+<p>Define el servicio web, las variables de entorno y la base de datos PostgreSQL. Render hace redeploy automático en cada push a la rama <code>main</code>.</p>
+
+<h3>Script de Inicio</h3>
+<pre><code># docker/start.sh
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
+php artisan migrate --force
+php artisan db:seed --force
+php artisan serve --host=0.0.0.0 --port=8000 &
+nginx -g "daemon off;"</code></pre>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="s10">10. Variables de Entorno</h2>
+
+<h3>Backend (.env)</h3>
+<table>
+  <tr><th>Variable</th><th>Descripción</th></tr>
+  <tr><td><code>APP_KEY</code></td><td>Clave de cifrado de Laravel (base64)</td></tr>
+  <tr><td><code>DB_CONNECTION</code></td><td>pgsql (producción) / sqlite (local)</td></tr>
+  <tr><td><code>DB_URL</code></td><td>URL de conexión a PostgreSQL en Render</td></tr>
+  <tr><td><code>MAIL_MAILER</code></td><td>smtp</td></tr>
+  <tr><td><code>MAIL_HOST</code></td><td>smtp.gmail.com</td></tr>
+  <tr><td><code>MAIL_PORT</code></td><td>465</td></tr>
+  <tr><td><code>MAIL_USERNAME</code></td><td>cuenta Gmail remitente</td></tr>
+  <tr><td><code>MAIL_PASSWORD</code></td><td>App Password de Gmail (16 caracteres)</td></tr>
+  <tr><td><code>STRIPE_KEY</code></td><td>Clave pública de Stripe</td></tr>
+  <tr><td><code>STRIPE_SECRET</code></td><td>Clave secreta de Stripe</td></tr>
+  <tr><td><code>STRIPE_WEBHOOK_SECRET</code></td><td>Secreto del webhook de Stripe</td></tr>
+  <tr><td><code>GOOGLE_CLIENT_ID</code></td><td>ID de cliente OAuth de Google</td></tr>
+  <tr><td><code>GOOGLE_CLIENT_SECRET</code></td><td>Secreto OAuth de Google</td></tr>
+</table>
+
+<h3>Frontend (.env)</h3>
+<table>
+  <tr><th>Variable</th><th>Descripción</th></tr>
+  <tr><td><code>VITE_API_URL</code></td><td>/api (producción) o http://localhost:8000/api</td></tr>
+  <tr><td><code>VITE_STRIPE_KEY</code></td><td>Clave pública de Stripe</td></tr>
+  <tr><td><code>VITE_GOOGLE_CLIENT_ID</code></td><td>Client ID de Google OAuth</td></tr>
+  <tr><td><code>VITE_CLOUDINARY_CLOUD_NAME</code></td><td>Nombre del cloud en Cloudinary</td></tr>
+  <tr><td><code>VITE_CLOUDINARY_UPLOAD_PRESET</code></td><td>Preset de subida de Cloudinary</td></tr>
+  <tr><td><code>VITE_MAPS_KEY</code></td><td>API Key de Google Maps</td></tr>
+  <tr><td><code>VITE_GROQ_KEY</code></td><td>API Key de Groq (IA)</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="s11">11. API REST — Endpoints</h2>
+
+<h3>Autenticación</h3>
+<table>
+  <tr><th>Método</th><th>Endpoint</th><th>Descripción</th></tr>
+  <tr><td>POST</td><td>/api/auth/register</td><td>Registrar nuevo usuario</td></tr>
+  <tr><td>POST</td><td>/api/auth/login</td><td>Iniciar sesión</td></tr>
+  <tr><td>POST</td><td>/api/auth/logout</td><td>Cerrar sesión</td></tr>
+  <tr><td>GET</td><td>/api/auth/me</td><td>Perfil del usuario autenticado</td></tr>
+  <tr><td>POST</td><td>/api/auth/google</td><td>Login con Google OAuth</td></tr>
+</table>
+
+<h3>Restaurantes (público)</h3>
+<table>
+  <tr><th>Método</th><th>Endpoint</th><th>Descripción</th></tr>
+  <tr><td>GET</td><td>/api/restaurants</td><td>Listar con filtros (zona, categoría, búsqueda)</td></tr>
+  <tr><td>GET</td><td>/api/restaurants/{id}</td><td>Detalle con menú, fotos, horario</td></tr>
+  <tr><td>GET</td><td>/api/restaurants/{id}/availability</td><td>Mesas disponibles para fecha/hora/personas</td></tr>
+  <tr><td>GET</td><td>/api/restaurants/{id}/reviews</td><td>Reseñas del restaurante</td></tr>
+</table>
+
+<h3>Reservas</h3>
+<table>
+  <tr><th>Método</th><th>Endpoint</th><th>Descripción</th></tr>
+  <tr><td>POST</td><td>/api/reservations</td><td>Crear reserva</td></tr>
+  <tr><td>GET</td><td>/api/my/reservations</td><td>Mis reservas</td></tr>
+  <tr><td>PATCH</td><td>/api/reservations/{id}/cancel</td><td>Cancelar con reembolso</td></tr>
+</table>
+
+<h3>Panel Propietario</h3>
+<table>
+  <tr><th>Método</th><th>Endpoint</th><th>Descripción</th></tr>
+  <tr><td>GET</td><td>/api/owner/restaurants</td><td>Mis restaurantes</td></tr>
+  <tr><td>GET</td><td>/api/owner/restaurants/{id}/menu</td><td>Menú del restaurante</td></tr>
+  <tr><td>POST</td><td>/api/owner/restaurants/{id}/menu</td><td>Agregar plato</td></tr>
+  <tr><td>PATCH</td><td>/api/owner/menu-items/{id}</td><td>Editar plato</td></tr>
+  <tr><td>DELETE</td><td>/api/owner/menu-items/{id}</td><td>Eliminar plato (soft)</td></tr>
+  <tr><td>PATCH</td><td>/api/owner/menu-items/{id}/restore</td><td>Restaurar plato</td></tr>
+  <tr><td>GET</td><td>/api/owner/restaurants/{id}/reservations</td><td>Ver reservas (con filtros)</td></tr>
+  <tr><td>POST</td><td>/api/owner/restaurants/{id}/reservations/scan</td><td>Validar QR</td></tr>
+</table>
+
+<h3>Panel Administrador</h3>
+<table>
+  <tr><th>Método</th><th>Endpoint</th><th>Descripción</th></tr>
+  <tr><td>GET</td><td>/api/admin/owners</td><td>Listar propietarios</td></tr>
+  <tr><td>POST</td><td>/api/admin/owners</td><td>Crear propietario</td></tr>
+  <tr><td>DELETE</td><td>/api/admin/owners/{id}</td><td>Eliminar propietario</td></tr>
+  <tr><td>PATCH</td><td>/api/admin/owners/{id}/reset-password</td><td>Resetear contraseña</td></tr>
+  <tr><td>GET</td><td>/api/admin/restaurants</td><td>Todos los restaurantes</td></tr>
+  <tr><td>POST</td><td>/api/admin/restaurants</td><td>Crear restaurante</td></tr>
+  <tr><td>PATCH</td><td>/api/admin/restaurants/{id}</td><td>Editar restaurante</td></tr>
+  <tr><td>DELETE</td><td>/api/admin/restaurants/{id}</td><td>Eliminar (soft)</td></tr>
+  <tr><td>GET</td><td>/api/admin/restaurants/trashed</td><td>Papelera</td></tr>
+  <tr><td>PATCH</td><td>/api/admin/restaurants/{id}/restore</td><td>Restaurar</td></tr>
+  <tr><td>DELETE</td><td>/api/admin/restaurants/{id}/force</td><td>Eliminar permanente</td></tr>
+  <tr><td>GET</td><td>/api/admin/stats</td><td>Estadísticas globales</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="s12">12. Flujos Principales del Sistema</h2>
+
+<h3>Flujo de Reserva Completo</h3>
+<pre><code>Cliente selecciona restaurante
+  → Elige fecha y escribe hora libremente
+  → Sistema consulta GET /api/restaurants/{id}/availability
+  → Backend verifica conflictos de ±90 minutos
+  → Muestra mesas disponibles en tiempo real
+  → Cliente selecciona mesa y activa depósito Stripe
+  → POST /api/reservations  →  estado: pending
+  → Backend crea sesión Stripe  →  devuelve checkout_url
+  → Cliente paga en Stripe ($5 USD)
+  → Stripe llama webhook → POST /api/payments/confirm-reservation
+  → Backend cambia estado a confirmed
+  → Envía correo al cliente y al propietario
+  → Cliente ve reserva con código QR en /mis-reservas
+
+En el restaurante:
+  → Propietario escanea QR con la cámara
+  → POST /api/owner/restaurants/{id}/reservations/scan
+  → Sistema valida el código y marca como completed</code></pre>
+
+<h3>Flujo de Cancelación y Reembolso</h3>
+<pre><code>Cliente cancela desde /mis-reservas
+  → PATCH /api/reservations/{id}/cancel
+  → Si payment_intent_id existe y !deposit_refunded:
+      - Si status = requires_capture → PaymentIntent::cancel()
+      - Si status = succeeded → Refund::create()
+  → Reserva queda en estado cancelled
+  → deposit_refunded = true</code></pre>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="s13">13. CI/CD y Control de Calidad</h2>
+
+<h3>Pipeline CI/CD</h3>
+<pre><code>Push a GitHub (rama main)
+  → GitHub Actions ejecuta SonarCloud análisis
+  → Render detecta el push y hace redeploy automático
+  → Docker build multi-stage
+  → Migraciones automáticas (RUN_MIGRATIONS=true)
+  → Servicio disponible en ~3-5 minutos</code></pre>
+
+<h3>Tests</h3>
+<table>
+  <tr><th>Tipo</th><th>Framework</th><th>Cantidad</th></tr>
+  <tr><td>Backend (unitarios e integración)</td><td>PHPUnit</td><td>51 tests</td></tr>
+  <tr><td>Frontend (componentes)</td><td>Vitest</td><td>43 tests</td></tr>
+</table>
+
+<h3>SonarCloud</h3>
+<p>Archivo <code>sonar-project.properties</code> configura el análisis estático. Analiza backend PHP y frontend JS/JSX. Métricas: bugs, vulnerabilidades, code smells, duplicación.</p>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<h2 id="s14">14. Solución de Problemas Comunes</h2>
+
+<div class="card">
+  <h4>El servidor de Render tarda en responder</h4>
+  <p>El plan gratuito de Render suspende el servidor tras 15 minutos sin tráfico. La primera petición puede tardar 30-60 segundos en "despertar" el contenedor. Es normal.</p>
+</div>
+
+<div class="card">
+  <h4>Los correos no llegan</h4>
+  <p>Render bloquea conexiones SMTP salientes en algunos rangos de IP. Verificar en los logs de Render si hay errores de <code>Connection timed out</code> en el puerto 465. Alternativa: usar Resend con <code>MAIL_MAILER=resend</code> y <code>RESEND_KEY</code>.</p>
+</div>
+
+<div class="card">
+  <h4>Error 419 CSRF</h4>
+  <p>No aplica para APIs con Sanctum y tokens Bearer. Si aparece, verificar que el frontend esté enviando el header <code>Authorization: Bearer {token}</code>.</p>
+</div>
+
+<div class="card">
+  <h4>CORS bloqueado</h4>
+  <p>Verificar que <code>CORS_ALLOWED_ORIGINS</code> incluya la URL del frontend. En producción debe ser <code>https://reservaya-3cbw.onrender.com</code>.</p>
+</div>
+
+<div class="card">
+  <h4>Migraciones no corren en producción</h4>
+  <p>Verificar que <code>RUN_MIGRATIONS=true</code> esté en las variables de Render. Las migraciones corren automáticamente en el script de inicio del contenedor.</p>
+</div>
+
+<div class="info-box">
+  <p><strong>Tarjeta de prueba Stripe:</strong> 4242 4242 4242 4242 · Vencimiento: 12/26 · CVC: 123 · CP: 12345</p>
+</div>
+
+</div>
+
+<footer>
+  <p>ReservaYa — Manual Técnico · Junio 2026</p>
+  <p style="margin-top:6px">Desarrollado con Laravel 11 + React 18 · Desplegado en Render</p>
+</footer>
+
+</body>
+</html>

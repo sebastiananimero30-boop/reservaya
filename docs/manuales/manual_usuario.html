@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Manual de Usuario — ReservaYa</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI',sans-serif; background:#f8f7f4; color:#1c1917; line-height:1.7; }
+  .cover { background:linear-gradient(135deg,#f97316,#ea580c); color:white; padding:80px 60px; }
+  .cover h1 { font-size:3rem; font-weight:800; margin-bottom:8px; }
+  .cover p { font-size:1.2rem; opacity:.9; }
+  .cover .badge { display:inline-block; background:rgba(255,255,255,.2); padding:4px 14px; border-radius:20px; font-size:.85rem; margin-top:16px; }
+  .toc { background:white; padding:40px 60px; border-bottom:1px solid #e7e5e4; }
+  .toc h2 { font-size:1.3rem; color:#f97316; margin-bottom:20px; }
+  .toc ol { padding-left:20px; }
+  .toc li { margin:6px 0; }
+  .toc a { color:#44403c; text-decoration:none; }
+  .toc a:hover { color:#f97316; }
+  .container { max-width:960px; margin:0 auto; padding:40px 60px; }
+  h2 { font-size:1.8rem; font-weight:700; color:#f97316; margin:48px 0 16px; padding-top:48px; border-top:2px solid #fed7aa; }
+  h3 { font-size:1.2rem; font-weight:700; color:#292524; margin:28px 0 10px; }
+  p { margin-bottom:12px; color:#44403c; }
+  ul,ol { padding-left:22px; margin-bottom:12px; }
+  li { margin:5px 0; color:#44403c; }
+  .step { display:flex; gap:16px; margin:12px 0; align-items:flex-start; }
+  .step-num { background:#f97316; color:white; width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:.9rem; flex-shrink:0; margin-top:2px; }
+  .step-text { flex:1; }
+  .tip { background:#fffbeb; border-left:4px solid #f97316; padding:14px 18px; border-radius:0 8px 8px 0; margin:16px 0; }
+  .tip p { margin:0; font-size:.92em; }
+  .card { background:white; border:1px solid #e7e5e4; border-radius:12px; padding:20px 24px; margin:16px 0; }
+  .card h4 { margin-top:0; color:#f97316; font-size:1rem; margin-bottom:8px; }
+  table { width:100%; border-collapse:collapse; margin:16px 0; font-size:.9em; }
+  th { background:#f97316; color:white; padding:10px 14px; text-align:left; }
+  td { padding:9px 14px; border-bottom:1px solid #e7e5e4; }
+  tr:nth-child(even) td { background:#fafaf9; }
+  code { background:#fef3c7; color:#92400e; padding:2px 7px; border-radius:4px; font-size:.88em; }
+  footer { background:#1c1917; color:#a8a29e; text-align:center; padding:30px; margin-top:60px; font-size:.88em; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <h1>Manual de Usuario</h1>
+  <p>ReservaYa — Guía completa para clientes, propietarios y administradores</p>
+  <div class="badge">Versión 1.0 · Junio 2026</div>
+</div>
+
+<div class="toc">
+  <h2>Tabla de Contenidos</h2>
+  <ol>
+    <li><a href="#s1">Acceso a la Plataforma</a></li>
+    <li><a href="#s2">Módulo Cliente — Hacer una Reserva</a></li>
+    <li><a href="#s3">Módulo Cliente — Mis Reservas</a></li>
+    <li><a href="#s4">Panel Propietario</a></li>
+    <li><a href="#s5">Panel Administrador</a></li>
+    <li><a href="#s6">Instalar como App (PWA)</a></li>
+    <li><a href="#s7">Preguntas Frecuentes</a></li>
+  </ol>
+</div>
+
+<div class="container">
+
+<h2 id="s1">1. Acceso a la Plataforma</h2>
+
+<h3>Registro</h3>
+<div class="step"><div class="step-num">1</div><div class="step-text">Ve a <code>https://reservaya-3cbw.onrender.com</code> y haz clic en <strong>Registrarse</strong>.</div></div>
+<div class="step"><div class="step-num">2</div><div class="step-text">Completa tu nombre, correo y contraseña. También puedes registrarte con Google.</div></div>
+<div class="step"><div class="step-num">3</div><div class="step-text">Serás redirigido automáticamente al inicio de sesión.</div></div>
+
+<h3>Inicio de Sesión</h3>
+<div class="step"><div class="step-num">1</div><div class="step-text">Haz clic en <strong>Iniciar sesión</strong> en la barra de navegación.</div></div>
+<div class="step"><div class="step-num">2</div><div class="step-text">Ingresa tu correo y contraseña, o usa el botón <strong>Continuar con Google</strong>.</div></div>
+
+<h3>Credenciales de Prueba</h3>
+<table>
+  <tr><th>Rol</th><th>Email</th><th>Contraseña</th></tr>
+  <tr><td>Cliente</td><td>client@test.app</td><td>client123</td></tr>
+  <tr><td>Propietario</td><td>owner@pizzeria.com</td><td>owner123</td></tr>
+  <tr><td>Administrador</td><td>admin@reservaya.app</td><td>admin123</td></tr>
+</table>
+
+<h2 id="s2">2. Módulo Cliente — Hacer una Reserva</h2>
+
+<h3>Buscar un Restaurante</h3>
+<div class="step"><div class="step-num">1</div><div class="step-text">En la página principal usa la barra de búsqueda o el botón naranja para buscar por nombre, zona o tipo de comida.</div></div>
+<div class="step"><div class="step-num">2</div><div class="step-text">Filtra por categoría (Italiana, Típica, Parrilla, etc.) usando los botones de la parte superior.</div></div>
+<div class="step"><div class="step-num">3</div><div class="step-text">Haz clic en un restaurante para ver su detalle: fotos, menú, reseñas y ubicación en el mapa.</div></div>
+
+<h3>Hacer la Reserva</h3>
+<div class="step"><div class="step-num">1</div><div class="step-text">En la página del restaurante, busca el formulario <strong>Reservar mesa</strong> en el lado derecho.</div></div>
+<div class="step"><div class="step-num">2</div><div class="step-text">Selecciona la <strong>fecha</strong> usando el calendario. Puedes reservar para el mismo día.</div></div>
+<div class="step"><div class="step-num">3</div><div class="step-text">Escribe la <strong>hora</strong> que deseas (ej: 19:30). El sistema verifica automáticamente si hay mesas disponibles.</div></div>
+<div class="step"><div class="step-num">4</div><div class="step-text">Selecciona el <strong>número de personas</strong> (1 a 8).</div></div>
+<div class="step"><div class="step-num">5</div><div class="step-text">Si la hora está disponible, verás las mesas libres. Haz clic en una para seleccionarla.</div></div>
+<div class="step"><div class="step-num">6</div><div class="step-text">Activa la opción <strong>Garantizar con depósito ($5 USD)</strong> para confirmar la reserva.</div></div>
+<div class="step"><div class="step-num">7</div><div class="step-text">Haz clic en <strong>Continuar al pago</strong> y completa el pago con tarjeta en Stripe.</div></div>
+<div class="step"><div class="step-num">8</div><div class="step-text">¡Listo! Recibirás un correo de confirmación y serás redirigido a tus reservas.</div></div>
+
+<div class="tip"><p><strong>Tarjeta de prueba:</strong> 4242 4242 4242 4242 · Vencimiento: 12/26 · CVC: 123 · CP: 12345</p></div>
+
+<div class="tip"><p><strong>Nota:</strong> Si la hora muestra el letrero rojo "Esa hora no está disponible", todas las mesas están ocupadas. Prueba con otra hora o fecha.</p></div>
+
+<h2 id="s3">3. Módulo Cliente — Mis Reservas</h2>
+
+<div class="step"><div class="step-num">1</div><div class="step-text">Haz clic en tu nombre en la barra superior y selecciona <strong>Mis Reservas</strong>.</div></div>
+<div class="step"><div class="step-num">2</div><div class="step-text">Verás el listado de todas tus reservas con su estado actual.</div></div>
+<div class="step"><div class="step-num">3</div><div class="step-text">Cada reserva tiene un <strong>código QR</strong> que debes mostrar al llegar al restaurante.</div></div>
+<div class="step"><div class="step-num">4</div><div class="step-text">Para cancelar, haz clic en <strong>Cancelar reserva</strong>. El depósito se reembolsa automáticamente a tu tarjeta.</div></div>
+
+<h3>Estados de las Reservas</h3>
+<table>
+  <tr><th>Estado</th><th>Significado</th></tr>
+  <tr><td>Pendiente</td><td>Esperando confirmación del restaurante</td></tr>
+  <tr><td>Confirmada</td><td>Reserva activa, lleva tu QR</td></tr>
+  <tr><td>Completada</td><td>Ya asististe al restaurante</td></tr>
+  <tr><td>Cancelada</td><td>Reserva cancelada, depósito reembolsado</td></tr>
+  <tr><td>No se presentó</td><td>No llegaste a la reserva</td></tr>
+</table>
+
+<h2 id="s4">4. Panel Propietario</h2>
+
+<p>Accede desde el menú superior al iniciar sesión con una cuenta de propietario.</p>
+
+<h3>Pestaña Menú</h3>
+<ul>
+  <li><strong>Agregar plato:</strong> completa nombre, categoría, precio e imagen y guarda.</li>
+  <li><strong>Editar plato:</strong> haz clic en "Editar" en el plato que deseas modificar.</li>
+  <li><strong>Ocultar/Mostrar:</strong> controla qué platos ve el público sin eliminarlo.</li>
+  <li><strong>Eliminar:</strong> el plato va a la papelera (se puede restaurar desde la pestaña Eliminados).</li>
+</ul>
+
+<h3>Pestaña Reservas</h3>
+<ul>
+  <li>Filtra por estado (Todas, Confirmadas, Pendientes, etc.).</li>
+  <li>Filtra por rango de fechas: "Por fecha de reserva" (cuándo viene el cliente) o "Por fecha de creación" (cuándo hizo la reserva).</li>
+  <li>Usa los botones para <strong>Confirmar</strong>, <strong>Completar</strong>, <strong>Cancelar</strong> o marcar como <strong>No se presentó</strong>.</li>
+</ul>
+
+<h3>Escáner QR</h3>
+<ul>
+  <li>Haz clic en <strong>Escanear QR</strong> dentro de la pestaña Reservas.</li>
+  <li>Permite el acceso a la cámara y enfoca el código QR del cliente.</li>
+  <li>También puedes escribir el código manualmente (ej: RYA-000001).</li>
+  <li>El sistema muestra los datos de la reserva. Haz clic en <strong>Validar llegada</strong> para marcarla como completada.</li>
+</ul>
+
+<h3>Pestaña Estadísticas</h3>
+<p>Muestra gráficas de reservas por mes, ocupación de mesas, ingresos estimados y clientes frecuentes.</p>
+
+<h3>Pestaña Eliminados</h3>
+<p>Lista de productos del menú eliminados. Puedes <strong>restaurarlos</strong> o <strong>eliminarlos permanentemente</strong>.</p>
+
+<h2 id="s5">5. Panel Administrador</h2>
+
+<p>Solo accesible con la cuenta administrador. Desde el menú superior → <strong>Admin</strong>.</p>
+
+<h3>Pestaña Propietarios</h3>
+<ul>
+  <li><strong>Crear propietario:</strong> ingresa nombre, email y teléfono. Se genera una contraseña automática que debes copiar y entregar.</li>
+  <li><strong>Eliminar propietario:</strong> el restaurante queda sin dueño pero no se elimina.</li>
+</ul>
+
+<h3>Pestaña Restaurantes</h3>
+<ul>
+  <li><strong>Crear restaurante:</strong> define nombre, dirección, zona, categoría y mesas.</li>
+  <li><strong>Editar:</strong> modifica datos o número de mesas.</li>
+  <li><strong>Foto de portada:</strong> sube o cambia la imagen principal.</li>
+  <li><strong>Asignar propietario:</strong> usa el selector desplegable en cada restaurante.</li>
+  <li><strong>Eliminar:</strong> el restaurante va a la papelera (recuperable desde Herramientas).</li>
+</ul>
+
+<h3>Pestaña Estadísticas</h3>
+<p>Métricas globales: total de restaurantes, propietarios, clientes, reservas por mes y por estado.</p>
+
+<h3>Pestaña Herramientas</h3>
+<div class="card">
+  <h4>Restaurantes eliminados</h4>
+  <p>Lista de restaurantes en la papelera. Botón <strong>Restaurar</strong> para recuperarlos o <strong>Eliminar</strong> para borrarlos definitivamente.</p>
+</div>
+<div class="card">
+  <h4>Restablecer contraseña</h4>
+  <p>Selecciona un propietario del listado, elige si generar contraseña automática o escribir una manual, y guarda. El sistema muestra la nueva contraseña para que la entregues al propietario.</p>
+</div>
+
+<h2 id="s6">6. Instalar como App (PWA)</h2>
+
+<div class="step"><div class="step-num">1</div><div class="step-text">Abre ReservaYa en Chrome o Edge.</div></div>
+<div class="step"><div class="step-num">2</div><div class="step-text">En la barra de direcciones verás un ícono de instalación (pantalla con flecha). Haz clic.</div></div>
+<div class="step"><div class="step-num">3</div><div class="step-text">Haz clic en <strong>Instalar</strong> en la ventana que aparece.</div></div>
+<div class="step"><div class="step-num">4</div><div class="step-text">ReservaYa se instala como una app nativa en tu escritorio o pantalla de inicio.</div></div>
+
+<h2 id="s7">7. Preguntas Frecuentes</h2>
+
+<div class="card">
+  <h4>¿Puedo reservar para el mismo día?</h4>
+  <p>Sí. Solo asegúrate de que la hora que eliges sea futura (al menos unos minutos adelante de la hora actual).</p>
+</div>
+<div class="card">
+  <h4>¿Qué pasa si no me presento?</h4>
+  <p>El propietario puede marcarte como "No se presentó". El depósito no se reembolsa en ese caso.</p>
+</div>
+<div class="card">
+  <h4>¿El depósito se descuenta del total de la cuenta?</h4>
+  <p>El depósito de $5 USD es un anticipo de garantía. Consulta directamente con el restaurante si lo aplican al total.</p>
+</div>
+<div class="card">
+  <h4>¿Puedo escribir cualquier hora?</h4>
+  <p>Sí, el campo de hora es libre. El sistema verifica automáticamente si esa hora está disponible al escribirla.</p>
+</div>
+<div class="card">
+  <h4>¿Puedo dejar reseñas?</h4>
+  <p>Sí. Desde la página de cualquier restaurante, al final encontrarás la sección de reseñas donde puedes dejar tu calificación y comentario.</p>
+</div>
+
+</div>
+
+<footer>
+  <p>ReservaYa — Manual de Usuario · Junio 2026</p>
+</footer>
+</body>
+</html>
