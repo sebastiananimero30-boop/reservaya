@@ -138,7 +138,7 @@ export default function ReservationForm({ restaurant }) {
 
         {/* Disponibilidad de la hora seleccionada */}
         <div>
-          {!datetime.time ? (
+          {!datetime.time || isPastDateTime() ? (
             <p className="text-sm text-stone-400">Selecciona una hora para ver disponibilidad.</p>
           ) : loadingSlots ? (
             <div className="flex items-center gap-2 text-sm text-stone-400">
@@ -147,17 +147,17 @@ export default function ReservationForm({ restaurant }) {
           ) : availableTables.length === 0 ? (
             <div className="flex items-center gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-3 text-sm text-red-600 dark:text-red-400">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
-              <span>⛔ Esa hora no está disponible. Todas las mesas están ocupadas, prueba con otra hora.</span>
+              <span>Esa hora no esta disponible. Todas las mesas estan ocupadas, prueba con otra hora.</span>
             </div>
           ) : (
             <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-3 text-sm text-green-700 dark:text-green-400">
-              ✅ Hora disponible — {availableTables.length} {availableTables.length === 1 ? 'mesa libre' : 'mesas libres'}
+              Hora disponible — {availableTables.length} {availableTables.length === 1 ? 'mesa libre' : 'mesas libres'}
             </div>
           )}
         </div>
 
         {/* Mesas */}
-        {availableTables.length > 0 && (
+        {availableTables.length > 0 && !isPastDateTime() && (
           <div>
             <h4 className="text-sm font-semibold mb-3 text-stone-700 dark:text-stone-300">
               Selecciona tu mesa
