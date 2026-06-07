@@ -1,0 +1,26 @@
+name: Backup Base de Datos
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # Cada domingo a medianoche UTC
+  workflow_dispatch:       # También permite ejecutarlo manualmente
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Instalar cliente PostgreSQL
+        run: sudo apt-get install -y postgresql-client
+
+      - name: Ejecutar pg_dump
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          pg_dump "$DATABASE_URL" > backup_$(date +%Y%m%d).sql
+
+      - name: Guardar backup como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: backup-${{ github.run_number }}
+          path: backup_*.sql
+          retention-days: 90
