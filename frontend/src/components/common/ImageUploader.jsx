@@ -3,6 +3,7 @@ import { Upload, X, ImagePlus, Loader2 } from 'lucide-react'
 import { useCloudinaryUpload } from '../../hooks/useCloudinaryUpload'
 import toast from 'react-hot-toast'
 import clsx from 'clsx'
+import PropTypes from 'prop-types'
 
 /**
  * Componente de subida de imágenes con Cloudinary.
@@ -134,4 +135,10 @@ export default function ImageUploader({ onUpload, currentUrl = '', label = 'Subi
       )}
     </div>
   )
+}
+
+ImageUploader.propTypes = {
+  onUpload: PropTypes.func.isRequired,
+  currentUrl: PropTypes.string,
+  label: PropTypes.string,
 }

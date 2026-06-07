@@ -4,6 +4,7 @@ import { Elements, CardElement, useStripe, useElements } from '@stripe/react-str
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, CreditCard, Loader2, Lock, CheckCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
+import PropTypes from 'prop-types'
 import api from '../../api/axios'
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_KEY || '')
@@ -177,4 +178,11 @@ export default function StripePaymentModal({ open, onClose, reservationData, onS
       )}
     </AnimatePresence>
   )
+}
+
+StripePaymentModal.propTypes = {
+  open: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  reservationData: PropTypes.object,
+  onSuccess: PropTypes.func.isRequired,
 }

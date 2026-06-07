@@ -6,6 +6,7 @@ import {
 import { Store, Users, CalendarCheck, UserCheck, XCircle, TrendingUp } from 'lucide-react'
 import Spinner from '../common/Spinner'
 import { getAdminStats } from '../../api/admin'
+import PropTypes from 'prop-types'
 
 const STATUS_COLORS = {
   confirmed:  '#22c55e',
@@ -41,6 +42,13 @@ function StatCard({ icon: Icon, label, value, color = 'primary' }) {
   )
 }
 
+StatCard.propTypes = {
+  icon: PropTypes.elementType.isRequired,
+  label: PropTypes.string.isRequired,
+  value: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
+  color: PropTypes.oneOf(['primary', 'green', 'blue', 'purple']),
+}
+
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
   return (
@@ -49,6 +57,12 @@ const CustomTooltip = ({ active, payload, label }) => {
       <p className="text-primary-500 font-bold">{payload[0].value} reservas</p>
     </div>
   )
+}
+
+CustomTooltip.propTypes = {
+  active: PropTypes.bool,
+  payload: PropTypes.array,
+  label: PropTypes.string,
 }
 
 export default function AdminStats() {

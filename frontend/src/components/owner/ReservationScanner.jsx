@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Camera, CheckCircle, Keyboard, Loader2, Search, Square, Upload } from 'lucide-react'
 import { BrowserQRCodeReader } from '@zxing/browser'
 import clsx from 'clsx'
+import PropTypes from 'prop-types'
 
 const STATUS_LABEL = { confirmed: 'Confirmada', pending: 'Pendiente', completed: 'Completada', cancelled: 'Cancelada', no_show: 'No se presentó' }
 const STATUS_BADGE = {
@@ -198,4 +199,22 @@ export default function ReservationScanner({ restaurantName, onScan, onComplete,
       </div>
     </div>
   )
+}
+
+ReservationScanner.propTypes = {
+  restaurantName: PropTypes.string,
+  onScan: PropTypes.func.isRequired,
+  onComplete: PropTypes.func.isRequired,
+  loading: PropTypes.bool,
+  result: PropTypes.shape({
+    reservation: PropTypes.shape({
+      guest_name: PropTypes.string,
+      code: PropTypes.string,
+      status: PropTypes.string,
+      start_time: PropTypes.string,
+      guests: PropTypes.number,
+      table: PropTypes.string,
+      guest_email: PropTypes.string,
+    }),
+  }),
 }

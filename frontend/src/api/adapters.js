@@ -61,7 +61,7 @@ export function adaptTable(t) {
   // Extraer el número de la mesa del campo name ("Mesa 3" → 3)
   // Si no se puede extraer, usar el índice o el id como fallback
   const nameStr = t.name ?? t.nombre ?? ''
-  const numFromName = parseInt(nameStr.replace(/[^0-9]/g, ''), 10)
+  const numFromName = Number.parseInt(nameStr.replace(/[^0-9]/g, ''), 10)
 
   return {
     id:         t.id,

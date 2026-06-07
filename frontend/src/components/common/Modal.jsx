@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
+import PropTypes from 'prop-types'
 
 export default function Modal({ open, onClose, title, children, size = 'md' }) {
   useEffect(() => {
@@ -40,4 +41,12 @@ export default function Modal({ open, onClose, title, children, size = 'md' }) {
       )}
     </AnimatePresence>
   )
+}
+
+Modal.propTypes = {
+  open: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  title: PropTypes.string,
+  children: PropTypes.node,
+  size: PropTypes.oneOf(['sm', 'md', 'lg', 'xl']),
 }

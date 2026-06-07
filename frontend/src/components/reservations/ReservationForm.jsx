@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { useMutation } from '@tanstack/react-query'
 import { CheckCircle, Loader2, AlertCircle, CreditCard } from 'lucide-react'
 import toast from 'react-hot-toast'
+import PropTypes from 'prop-types'
 import DateTimePicker from './DateTimePicker'
 import StripePaymentModal from './StripePaymentModal'
 import { createReservation } from '../../api/reservations'
@@ -17,7 +18,7 @@ const STRIPE_ENABLED = !!import.meta.env.VITE_STRIPE_KEY
 function format12Hour(time24) {
   if (!time24) return ''
   const [hours, minutes] = time24.split(':')
-  const h = parseInt(hours, 10)
+  const h = Number.parseInt(hours, 10)
   const period = h >= 12 ? 'PM' : 'AM'
   const h12 = h % 12 || 12
   return `${h12}:${minutes} ${period}`
@@ -243,4 +244,10 @@ export default function ReservationForm({ restaurant }) {
       />
     </>
   )
+}
+
+ReservationForm.propTypes = {
+  restaurant: PropTypes.shape({
+    id: PropTypes.number.isRequired,
+  }).isRequired,
 }

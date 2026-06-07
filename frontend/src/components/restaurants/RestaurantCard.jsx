@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Star, MapPin, Clock } from 'lucide-react'
 import clsx from 'clsx'
+import PropTypes from 'prop-types'
 
 const CATEGORY_EMOJIS = {
   'Parrilla': '🥩', 'Japonesa': '🍣', 'Vegetariana': '🥗', 'Colombiana': '🍲',
@@ -135,4 +136,21 @@ export function RestaurantCardSkeleton() {
       </div>
     </div>
   )
+}
+
+RestaurantCard.propTypes = {
+  restaurant: PropTypes.shape({
+    id: PropTypes.number,
+    nombre: PropTypes.string,
+    imagen: PropTypes.string,
+    categoria: PropTypes.string,
+    zona: PropTypes.string,
+    calificacion: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+    total_resenas: PropTypes.number,
+    precio: PropTypes.string,
+    destacado: PropTypes.bool,
+    horario: PropTypes.string,
+    reservas_hoy: PropTypes.number,
+  }).isRequired,
+  index: PropTypes.number,
 }

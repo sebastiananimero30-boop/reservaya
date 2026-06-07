@@ -1,5 +1,6 @@
 import { Calendar, Clock, Users } from 'lucide-react'
 import clsx from 'clsx'
+import PropTypes from 'prop-types'
 
 export default function DateTimePicker({ value, onChange }) {
   const now = new Date()
@@ -88,4 +89,13 @@ export default function DateTimePicker({ value, onChange }) {
       </div>
     </div>
   )
+}
+
+DateTimePicker.propTypes = {
+  value: PropTypes.shape({
+    date: PropTypes.string,
+    time: PropTypes.string,
+    guests: PropTypes.number,
+  }).isRequired,
+  onChange: PropTypes.func.isRequired,
 }

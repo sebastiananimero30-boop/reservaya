@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Trash2, RotateCcw, X, PackageX } from 'lucide-react'
 import { getTrashedMenuItems, restoreMenuItem, forceDeleteMenuItem } from '../../api/owner'
 import toast from 'react-hot-toast'
+import PropTypes from 'prop-types'
 
 export default function TrashedMenuItems({ restaurantId }) {
   const qc = useQueryClient()
@@ -74,4 +75,8 @@ export default function TrashedMenuItems({ restaurantId }) {
       ))}
     </div>
   )
+}
+
+TrashedMenuItems.propTypes = {
+  restaurantId: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
 }
